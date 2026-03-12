@@ -1,7 +1,7 @@
 (function () {
-  const PROJECT_URL = "https://pboqhiwhkqfitxvbzbxt.supabase.co";
+  const PROJECT_URL = "https://fazqsjpdxeeuflusudjy.supabase.co";
   const ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib3FoaXdoa3FmaXR4dmJ6Ynh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMDI4MzgsImV4cCI6MjA4NzU3ODgzOH0.H9DjOQmSop9e6O_z0uZgBNT2-WtuE4DJc4o1gFMs1do";
+    "sb_publishable_EQjWw8Un9js04SLKhMBdUA_Utq-kiR6";
   const TABLE_NAME = "app_settings";
   const KEY_PREFIX = "idCardCreator";
   const DELETED_SENTINEL = "__IDCARD_DELETED__";
