@@ -1,0 +1,2353 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Approved ID Previews</title>
+  <script>
+    (function () {
+      try {
+        const saved = window.localStorage.getItem("idCardCreatorInterfaceThemeV1");
+        if (saved === "dark") {
+          document.documentElement.classList.add("theme-dark");
+        } else {
+          document.documentElement.classList.remove("theme-dark");
+        }
+      } catch {
+        // ignore storage errors
+      }
+    })();
+  </script>
+  <script>
+    (function () {
+      document.documentElement.classList.add("credit-loading");
+      try {
+        const hasPhoto = !!window.localStorage.getItem("idCardCreatorCreatorCreditPhotoV1");
+        const hasText = !!window.localStorage.getItem("idCardCreatorCreatorCreditTextV1");
+        if (hasPhoto || hasText) document.documentElement.classList.add("credit-has-local");
+      } catch {
+        // ignore storage errors
+      }
+    })();
+  </script>
+  <style>
+    :root {
+      --bg: #e9eef9;
+      --bg-alt: #f8fbff;
+      --card: #ffffffd9;
+      --line: #d2ddf4;
+      --ink: #1a2b4f;
+      --muted: #5b6f97;
+      --blue: #2754d9;
+      --blue-deep: #1d44b8;
+      --danger: #c62828;
+      --ok: #1b8f4b;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Roboto Condensed", "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 8% 6%, rgba(109, 154, 255, 0.26), transparent 42%),
+        radial-gradient(circle at 92% 10%, rgba(102, 216, 180, 0.2), transparent 36%),
+        linear-gradient(180deg, var(--bg-alt), var(--bg));
+      color: var(--ink);
+      padding: 20px;
+      padding-bottom: 76px;
+      opacity: 1;
+      transition: opacity 0.24s ease, transform 0.24s ease;
+      animation: approvedPageIn 0.32s ease-out both;
+    }
+
+    body.page-leave {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    .card {
+      width: min(1200px, 100%);
+      margin: 0 auto;
+      border: 1px solid #d5e0f8;
+      border-radius: 18px;
+      background: var(--card);
+      box-shadow:
+        0 28px 52px rgba(21, 35, 66, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(8px);
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+      animation: approvedCardIn 0.36s ease-out both;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 1.35rem;
+      letter-spacing: 0.01em;
+      color: #17366f;
+    }
+
+    .hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .top-sticky {
+      position: sticky;
+      top: 10px;
+      z-index: 25;
+      display: grid;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid #d3def6;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #fafdff, #f1f6ff);
+      box-shadow: 0 8px 18px rgba(27, 50, 94, 0.14);
+    }
+
+    .search {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 8px;
+      align-items: center;
+      padding: 0;
+    }
+
+    .bulk-tools {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid #cfdbf4;
+      border-radius: 10px;
+      background: #f6faff;
+    }
+
+    .bulk-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      color: #2d4473;
+      font-weight: 700;
+    }
+
+    .bulk-check input {
+      width: auto;
+      margin: 0;
+    }
+
+    .bulk-info {
+      margin-left: auto;
+      font-size: 0.78rem;
+      color: #355287;
+      font-weight: 700;
+    }
+
+    .search input {
+      min-width: 200px;
+      border: 1px solid #c6d4f2;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: 600 0.86rem "Roboto Condensed", sans-serif;
+      color: var(--ink);
+      background: #fff;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .search input:focus {
+      outline: none;
+      border-color: #5a84ea;
+      box-shadow: 0 0 0 3px rgba(90, 132, 234, 0.2);
+    }
+
+    .btn {
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font: 700 0.78rem "Roboto Condensed", sans-serif;
+      letter-spacing: 0.03em;
+      color: #fff;
+      background: linear-gradient(160deg, var(--blue), var(--blue-deep));
+      cursor: pointer;
+      box-shadow: 0 10px 18px rgba(36, 77, 186, 0.22);
+      transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.03);
+      box-shadow: 0 14px 24px rgba(36, 77, 186, 0.26);
+    }
+
+    .btn-danger {
+      background: linear-gradient(160deg, #d53939, #b11f1f);
+      box-shadow: 0 10px 18px rgba(187, 40, 40, 0.25);
+    }
+
+    #showAllBtn {
+      background: linear-gradient(160deg, #1a9f96, #157f79);
+      box-shadow: 0 10px 18px rgba(20, 135, 127, 0.22);
+    }
+
+    #backToAdminBtn {
+      background: linear-gradient(160deg, #5c6783, #46516c);
+      box-shadow: 0 10px 18px rgba(61, 71, 95, 0.23);
+    }
+
+    .status {
+      margin: 0;
+      min-height: 1em;
+      font-size: 0.82rem;
+      color: #405a8f;
+      padding: 9px 10px;
+      border: 1px solid #d4dff6;
+      border-radius: 10px;
+      background: #f5f9ff;
+    }
+
+    .results {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      align-items: start;
+    }
+
+    .record {
+      border: 1px solid #ccdaf6;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, #fcfeff, #f3f8ff);
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      box-shadow: 0 10px 20px rgba(25, 49, 93, 0.09);
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+    }
+
+    .record.selected {
+      border-color: #5a84ea;
+      box-shadow:
+        0 14px 26px rgba(25, 49, 93, 0.14),
+        0 0 0 2px rgba(90, 132, 234, 0.22);
+    }
+
+    .record-select {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      margin-bottom: -2px;
+    }
+
+    .record-select label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.76rem;
+      color: #355287;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .record-select input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+    }
+
+    .record:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 26px rgba(25, 49, 93, 0.14);
+      border-color: #b7caf1;
+    }
+
+    .record-meta {
+      display: grid;
+      gap: 5px;
+      font-size: 0.81rem;
+      color: var(--ink);
+    }
+
+    .record-meta > div {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .record-meta strong {
+      color: #12307b;
+      min-width: 88px;
+    }
+
+    .status-expired {
+      color: #b61f26;
+      font-weight: 700;
+    }
+
+    .status-active {
+      color: var(--ok);
+      font-weight: 700;
+    }
+
+    .status-no-expiry {
+      color: #334155;
+      font-weight: 700;
+    }
+
+    .record-preview {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .record-preview img {
+      width: 100%;
+      aspect-ratio: 330 / 535;
+      object-fit: contain;
+      object-position: center;
+      border-radius: 10px;
+      border: 1px solid #c8d8f5;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(20, 39, 74, 0.11);
+      cursor: zoom-in;
+    }
+
+    .record-link {
+      display: grid;
+      gap: 4px;
+      padding: 8px 10px;
+      border: 1px solid #c8d8f3;
+      border-radius: 9px;
+      background: #f7fbff;
+      font-size: 0.75rem;
+      color: #47608d;
+    }
+
+    .record-link strong {
+      color: #1a3b84;
+    }
+
+    .record-link a {
+      color: #1d4ed8;
+      text-decoration: none;
+      word-break: break-all;
+      font-weight: 700;
+    }
+
+    .record-link a:hover {
+      text-decoration: underline;
+    }
+
+    .record-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: nowrap;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .btn-mini {
+      padding: 7px 10px;
+      font-size: 0.7rem;
+      border-radius: 8px;
+      min-height: 30px;
+      box-shadow: 0 6px 12px rgba(36, 77, 186, 0.18);
+    }
+
+    .edit-form {
+      display: grid;
+      gap: 8px;
+      border-top: 1px dashed #bed0f4;
+      padding-top: 10px;
+      margin-top: 2px;
+    }
+
+    .edit-form[hidden] {
+      display: none;
+    }
+
+    .edit-form label {
+      display: grid;
+      gap: 3px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .edit-form input,
+    .confirm-card input,
+    .confirm-card select {
+      border: 1px solid #c4d3f1;
+      border-radius: 9px;
+      padding: 9px 10px;
+      font: 600 0.8rem "Roboto Condensed", sans-serif;
+      color: #20315a;
+      background: #fff;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .edit-form input:focus,
+    .confirm-card input:focus,
+    .confirm-card select:focus {
+      outline: none;
+      border-color: #5a84ea;
+      box-shadow: 0 0 0 3px rgba(90, 132, 234, 0.2);
+    }
+
+    .confirm-modal {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      background:
+        radial-gradient(circle at 18% 14%, rgba(82, 123, 232, 0.3), transparent 35%),
+        rgba(12, 21, 41, 0.58);
+      backdrop-filter: blur(5px);
+      z-index: 100;
+    }
+
+    .confirm-modal[hidden] {
+      display: none;
+    }
+
+    .confirm-card {
+      width: min(420px, 100%);
+      border: 1px solid #cad8f5;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #ffffff, #f4f8ff);
+      box-shadow: 0 24px 48px rgba(20, 35, 66, 0.32);
+      padding: 16px;
+      display: grid;
+      gap: 9px;
+      animation: dialogIn 0.18s ease-out;
+    }
+
+    .confirm-title {
+      margin: 0;
+      font-size: 1.06rem;
+      color: #1f3158;
+      letter-spacing: 0.01em;
+    }
+
+    .confirm-text {
+      margin: 0;
+      font-size: 0.85rem;
+      color: #51658f;
+      line-height: 1.35;
+    }
+
+    .confirm-card label {
+      display: grid;
+      gap: 3px;
+      font-size: 0.77rem;
+      font-weight: 600;
+      color: #415a8d;
+    }
+
+    .confirm-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .auth-error {
+      margin: 0;
+      font-size: 0.78rem;
+      color: #b42328;
+      font-weight: 700;
+    }
+
+    .auth-error[hidden] {
+      display: none;
+    }
+
+    .preview-lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      align-items: center;
+      justify-items: center;
+      padding: 12px;
+      background: rgba(7, 12, 24, 0.82);
+      backdrop-filter: blur(5px);
+      animation: fadeInOverlay 0.18s ease-out;
+    }
+
+    .preview-lightbox[hidden] {
+      display: none;
+    }
+
+    .preview-lightbox-head {
+      width: min(1100px, 96vw);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #eaf0ff;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+
+    .preview-lightbox-title {
+      margin: 0;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .preview-lightbox-close {
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      padding: 7px 10px;
+      font: 700 0.74rem "Roboto Condensed", sans-serif;
+      cursor: pointer;
+    }
+
+    .preview-lightbox-img {
+      width: auto;
+      max-width: 96vw;
+      max-height: calc(100vh - 86px);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+      object-fit: contain;
+      animation: zoomInCard 0.22s ease-out;
+    }
+
+    .credits-box {
+      padding: 8px 12px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .footer-credit-text {
+      margin: 0;
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--fb-text, #1c1e21);
+      text-align: center;
+      font-family: "Roboto Condensed", "Segoe UI", Arial, sans-serif;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 70vw;
+    }
+
+    .app-credit {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: fixed;
+      left: 50%;
+      bottom: 10px;
+      transform: translateX(-50%);
+      z-index: 50;
+      max-width: calc(100vw - 24px);
+    }
+
+    .credit-loading .app-credit,
+    .credit-has-local .app-credit {
+      visibility: hidden;
+    }
+
+    .credit-ready .app-credit {
+      visibility: visible;
+    }
+
+    .app-credit img {
+      visibility: inherit;
+    }
+
+    .creator-credit-photo {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid rgba(24, 119, 242, 0.45);
+    }
+
+    @keyframes dialogIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes fadeInOverlay {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes zoomInCard {
+      from {
+        opacity: 0;
+        transform: scale(0.94);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes approvedPageIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes approvedCardIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.99);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @media (max-width: 920px) {
+      .search {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      #searchEmployeeNo {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 560px) {
+      body {
+        padding: 12px;
+      }
+
+      .card {
+        padding: 14px;
+      }
+
+      .search {
+        grid-template-columns: 1fr;
+      }
+
+      .btn {
+        width: 100%;
+      }
+
+      .record-preview {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    body.theme-dark {
+      --bg: #10151f;
+      --bg-alt: #151c2a;
+      --card: rgba(28, 34, 46, 0.92);
+      --line: #3b455b;
+      --ink: #e8edf7;
+      --muted: #b5bfd3;
+      --blue: #3f70e4;
+      --blue-deep: #315dcc;
+    }
+
+    body.theme-dark .card {
+      border-color: #3a475f;
+      box-shadow:
+        0 28px 52px rgba(0, 0, 0, 0.38),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    body.theme-dark .title {
+      color: #dbe6ff;
+    }
+
+    body.theme-dark .search {
+      background: transparent;
+    }
+
+    body.theme-dark .top-sticky {
+      border-color: #43506c;
+      background: linear-gradient(180deg, #2b3447, #242d3f);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.36);
+    }
+
+    body.theme-dark .bulk-tools {
+      border-color: #4a5b7d;
+      background: #283347;
+    }
+
+    body.theme-dark .bulk-check {
+      color: #d7e2f8;
+    }
+
+    body.theme-dark .bulk-info {
+      color: #b8c7e6;
+    }
+
+    body.theme-dark .search input {
+      border-color: #4d5c7b;
+      color: #e8edf7;
+      background: #20283a;
+    }
+
+    body.theme-dark .status {
+      color: #c3cde2;
+      border-color: #465472;
+      background: #242e42;
+    }
+
+    body.theme-dark .record {
+      border-color: #42506c;
+      background: linear-gradient(180deg, #2b3447, #253044);
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);
+    }
+
+    body.theme-dark .record:hover {
+      border-color: #546688;
+      box-shadow: 0 14px 26px rgba(0, 0, 0, 0.32);
+    }
+
+    body.theme-dark .record.selected {
+      border-color: #6f92ee;
+      box-shadow:
+        0 14px 26px rgba(0, 0, 0, 0.32),
+        0 0 0 2px rgba(111, 146, 238, 0.28);
+    }
+
+    body.theme-dark .record-select label {
+      color: #c7d7f6;
+    }
+
+    body.theme-dark .record-meta strong {
+      color: #bfd0fb;
+    }
+
+    body.theme-dark .record-preview img {
+      border-color: #495978;
+      background: #1f283a;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    body.theme-dark .record-link {
+      border-color: #355078;
+      background: #182744;
+      color: #9eb7df;
+    }
+
+    body.theme-dark .record-link strong {
+      color: #c5d6f6;
+    }
+
+    body.theme-dark .record-link a {
+      color: #93c5fd;
+    }
+
+    body.theme-dark .edit-form {
+      border-top-color: #516184;
+    }
+
+    body.theme-dark .edit-form input,
+    body.theme-dark .confirm-card input,
+    body.theme-dark .confirm-card select {
+      border-color: #4f5e7d;
+      color: #e9eefb;
+      background: #20283a;
+    }
+
+    body.theme-dark .confirm-card {
+      border-color: #4a5977;
+      background: linear-gradient(180deg, #2f3a4f, #263144);
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+    }
+
+    body.theme-dark .confirm-title {
+      color: #dbe6ff;
+    }
+
+    body.theme-dark .confirm-text,
+    body.theme-dark .confirm-card label {
+      color: #c0cbe0;
+    }
+
+    body.theme-dark .credits-box {
+      border-color: transparent;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    body.theme-dark .footer-credit-text {
+      color: #dbe6ff;
+    }
+
+    .approve-loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(120, 150, 210, 0.16), transparent 40%),
+        radial-gradient(circle at 80% 10%, rgba(255, 220, 160, 0.12), transparent 38%),
+        rgba(8, 12, 20, 0.12);
+      backdrop-filter: blur(6px);
+      color: #1d2f54;
+      font: 700 0.92rem "Roboto Condensed", "Segoe UI", Arial, sans-serif;
+      letter-spacing: 0.03em;
+    }
+
+    .refresh-loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9998;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(120, 150, 210, 0.12), transparent 40%),
+        radial-gradient(circle at 80% 10%, rgba(255, 220, 160, 0.1), transparent 38%),
+        rgba(8, 12, 20, 0.08);
+      backdrop-filter: blur(5px);
+      color: #1d2f54;
+      font: 700 0.9rem "Roboto Condensed", "Segoe UI", Arial, sans-serif;
+      letter-spacing: 0.03em;
+    }
+
+    body.theme-dark .refresh-loading-overlay {
+      color: #e6eefc;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(80, 110, 170, 0.18), transparent 40%),
+        radial-gradient(circle at 80% 10%, rgba(200, 170, 110, 0.12), transparent 38%),
+        rgba(6, 8, 12, 0.28);
+    }
+
+    .refresh-loading-card {
+      min-width: min(360px, 82vw);
+      padding: 12px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(90, 116, 170, 0.2);
+      background: rgba(255, 255, 255, 0.78);
+      box-shadow: 0 16px 28px rgba(0, 0, 0, 0.18);
+      display: grid;
+      gap: 10px;
+      text-align: center;
+    }
+
+    body.theme-dark .refresh-loading-card {
+      background: rgba(18, 22, 30, 0.82);
+      border-color: rgba(120, 146, 198, 0.26);
+    }
+
+    .refresh-loading-ring {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(44, 89, 210, 0.2);
+      border-top-color: rgba(44, 89, 210, 0.9);
+      animation: refreshRingSpin 0.9s linear infinite;
+      margin: 0 auto;
+    }
+
+    body.theme-dark .refresh-loading-ring {
+      border-color: rgba(140, 170, 230, 0.25);
+      border-top-color: rgba(160, 196, 255, 0.95);
+    }
+
+    @keyframes refreshRingSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    body.theme-dark .approve-loading-overlay {
+      color: #e6eefc;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(80, 110, 170, 0.2), transparent 40%),
+        radial-gradient(circle at 80% 10%, rgba(200, 170, 110, 0.14), transparent 38%),
+        rgba(6, 8, 12, 0.32);
+    }
+
+    .approve-loading-card {
+      min-width: min(360px, 82vw);
+      padding: 14px 16px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(90, 116, 170, 0.22);
+      background: rgba(255, 255, 255, 0.82);
+      box-shadow: 0 18px 32px rgba(0, 0, 0, 0.18);
+      display: grid;
+      gap: 10px;
+      text-align: center;
+    }
+
+    .approve-loading-bar {
+      position: relative;
+      height: 18px;
+      border-radius: 6px;
+      border: 2px solid #2f6b3f;
+      background: rgba(46, 118, 70, 0.08);
+      overflow: hidden;
+      padding: 2px 8px 2px 2px;
+    }
+
+    .approve-loading-bar::after {
+      content: "";
+      position: absolute;
+      right: -6px;
+      top: 5px;
+      width: 4px;
+      height: 8px;
+      border-radius: 2px;
+      background: #2f6b3f;
+    }
+
+    .approve-loading-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+      transition: width 0.2s ease;
+    }
+
+    .approve-loading-percent {
+      font: 700 0.8rem "Roboto Condensed", "Segoe UI", Arial, sans-serif;
+      color: #2b3f66;
+      letter-spacing: 0.04em;
+    }
+
+    body.theme-dark .approve-loading-card {
+      background: rgba(18, 22, 30, 0.86);
+      border-color: rgba(120, 146, 198, 0.28);
+    }
+
+    body.theme-dark .approve-loading-bar {
+      border-color: #3aa365;
+      background: rgba(34, 197, 94, 0.12);
+    }
+
+    body.theme-dark .approve-loading-bar::after {
+      background: #3aa365;
+    }
+
+    body.theme-dark .approve-loading-percent {
+      color: #d7e2ff;
+    }
+
+  </style>
+</head>
+<body class="theme-dark">
+  <main class="card">
+    <div class="top-sticky">
+      <h1 class="title">Search Employee ID Preview</h1>
+      <p class="hint">Search by Employee No or Name, or leave it empty and click Search to display all approved previews.</p>
+
+      <div class="search">
+        <input id="searchEmployeeNo" type="text" placeholder="Enter Employee No or Name" />
+        <button id="searchBtn" class="btn" type="button">Search</button>
+        <button id="showAllBtn" class="btn" type="button">Show All</button>
+        <button id="backToAdminBtn" class="btn" type="button">Back to Admin Interface</button>
+      </div>
+      <div class="bulk-tools">
+        <label class="bulk-check" for="selectAllVisible">
+          <input id="selectAllVisible" type="checkbox" />
+          Select all shown
+        </label>
+        <button id="clearSelectionBtn" class="btn" type="button" disabled>Clear Selection</button>
+        <button id="deleteSelectedBtn" class="btn btn-danger" type="button" disabled>Delete Selected</button>
+        <span id="selectionInfo" class="bulk-info">0 selected</span>
+      </div>
+    </div>
+
+    <p id="statusText" class="status">Loading approved IDs...</p>
+    <section id="resultsWrap" class="results" aria-label="Approved Employee ID Previews"></section>
+  </main>
+
+  <div id="deleteConfirmModal" class="confirm-modal" hidden>
+    <div class="confirm-card" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle">
+      <h2 id="deleteConfirmTitle" class="confirm-title">Delete Approved ID</h2>
+      <p id="deleteConfirmText" class="confirm-text">Are you sure you want to delete this approved ID?</p>
+      <div class="confirm-actions">
+        <button id="deleteConfirmCancel" class="btn" type="button">Cancel</button>
+        <button id="deleteConfirmOk" class="btn btn-danger" type="button">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="deleteAuthModal" class="confirm-modal" hidden>
+    <form id="deleteAuthForm" class="confirm-card" role="dialog" aria-modal="true" aria-labelledby="deleteAuthTitle">
+      <h2 id="deleteAuthTitle" class="confirm-title">Authorize Delete</h2>
+      <p class="confirm-text">Login as Admin or Super Admin to continue.</p>
+      <label>Role
+        <select id="deleteAuthRole">
+          <option value="admin">Admin</option>
+          <option value="superadmin">Super Admin</option>
+        </select>
+      </label>
+      <label>Username
+        <input id="deleteAuthUsername" type="text" autocomplete="username" placeholder="Enter username" />
+      </label>
+      <label>Password
+        <input id="deleteAuthPassword" type="password" autocomplete="current-password" placeholder="Enter password" />
+      </label>
+      <p id="deleteAuthError" class="auth-error" hidden>Invalid credentials for selected role.</p>
+      <div class="confirm-actions">
+        <button id="deleteAuthCancel" class="btn" type="button">Cancel</button>
+        <button id="deleteAuthSubmit" class="btn btn-danger" type="submit">Continue</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="previewLightbox" class="preview-lightbox" hidden>
+    <div class="preview-lightbox-head">
+      <p id="previewLightboxTitle" class="preview-lightbox-title">ID Preview</p>
+      <button id="previewLightboxClose" class="preview-lightbox-close" type="button">Close</button>
+    </div>
+    <img id="previewLightboxImg" class="preview-lightbox-img" alt="ID Preview" />
+  </div>
+
+  <div id="refreshLoadingOverlay" class="refresh-loading-overlay" hidden aria-live="polite" aria-busy="true">
+    <div class="refresh-loading-card">
+      <div>Loading approved IDs…</div>
+      <div class="refresh-loading-ring" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <section class="credits-box app-credit" aria-label="Footer Credit" style="visibility: hidden;">
+    <img
+      id="creatorCreditPhoto"
+      class="creator-credit-photo"
+      alt="Creator photo"
+      src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23cfd7ea'/%3E%3Ccircle cx='80' cy='63' r='28' fill='%23889abf'/%3E%3Cpath d='M30 140c9-25 29-39 50-39s41 14 50 39' fill='%23889abf'/%3E%3C/svg%3E"
+    />
+    <p id="creatorCreditText" class="footer-credit-text">Powered by Rafael Betinol — Professional &amp; Secure ID Creation</p>
+  </section>
+  <script>
+    (function () {
+      const photoEl = document.getElementById("creatorCreditPhoto");
+      const textEl = document.getElementById("creatorCreditText");
+      let revealed = false;
+      const applyFromStorage = () => {
+        try {
+          const cloudStore = window.idCardCloudStore;
+          const cloudPhoto = cloudStore ? cloudStore.getItem("idCardCreatorCreatorCreditPhotoV1") : null;
+          const cloudText = cloudStore ? cloudStore.getItem("idCardCreatorCreatorCreditTextV1") : null;
+          const localPhoto = window.localStorage.getItem("idCardCreatorCreatorCreditPhotoV1");
+          const localText = window.localStorage.getItem("idCardCreatorCreatorCreditTextV1");
+          const photo = cloudPhoto || localPhoto;
+          const text = cloudText || localText;
+          if (photoEl) {
+            photoEl.style.visibility = "hidden";
+          }
+          if (photo && photoEl) {
+            photoEl.onload = () => {
+              if (photoEl) photoEl.style.visibility = "visible";
+              reveal();
+            };
+            photoEl.onerror = () => {
+              if (photoEl) photoEl.style.visibility = "visible";
+              reveal();
+            };
+            photoEl.src = "";
+            photoEl.src = photo;
+          }
+          if (text && text.trim() && textEl) textEl.textContent = text;
+          if (cloudPhoto) window.localStorage.setItem("idCardCreatorCreatorCreditPhotoV1", String(cloudPhoto));
+          if (cloudText !== null && cloudText !== undefined) {
+            window.localStorage.setItem("idCardCreatorCreatorCreditTextV1", String(cloudText));
+          }
+        } catch {
+          // ignore storage errors
+        }
+      };
+      const reveal = () => {
+        if (revealed) return;
+        revealed = true;
+        document.documentElement.classList.add("credit-ready");
+        document.documentElement.classList.remove("credit-has-local");
+        document.documentElement.classList.remove("credit-loading");
+        const credit = document.querySelector(".app-credit");
+        if (credit) credit.style.visibility = "visible";
+        if (photoEl) photoEl.style.visibility = "visible";
+      };
+      const ready = window.__idCardCloudReady || Promise.resolve();
+      ready.then(() => {
+        applyFromStorage();
+        reveal();
+      });
+      window.addEventListener("id-card-store", (evt) => {
+        const key = evt && evt.detail ? evt.detail.key : "";
+        if (key === "idCardCreatorCreatorCreditPhotoV1" || key === "idCardCreatorCreatorCreditTextV1") {
+          applyFromStorage();
+          reveal();
+        }
+      });
+    })();
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="cloud-sync.js"></script>
+  <script>
+    const interfaceThemeStorageKey = "idCardCreatorInterfaceThemeV1";
+    const entryLoginSessionStorageKey = "idCardCreatorEntryLoginSessionV1";
+    const adminSessionStorageKey = "idCardCreatorAdminSessionV1";
+    const approvedIdsNavContextKey = "idCardCreatorApprovedIdsNavContextV1";
+    const superAdminCredentialsStorageKey = "idCardCreatorSuperAdminCredentialsV1";
+    const adminCredentialsStorageKey = "idCardCreatorAdminCredentialsV1";
+    const qrPublicBaseUrlStorageKey = "idCardCreatorQrBaseUrlV1";
+    const creatorCreditPhotoStorageKey = "idCardCreatorCreatorCreditPhotoV1";
+    const creatorCreditTextStorageKey = "idCardCreatorCreatorCreditTextV1";
+    const approvedIdsPendingOverlayKey = "idCardCreatorApprovedIdsPendingOverlayV1";
+    const supabaseProjectUrl = "https://pboqhiwhkqfitxvbzbxt.supabase.co";
+    const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib3FoaXdoa3FmaXR4dmJ6Ynh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMDI4MzgsImV4cCI6MjA4NzU3ODgzOH0.H9DjOQmSop9e6O_z0uZgBNT2-WtuE4DJc4o1gFMs1do";
+    const supabaseClient = window.__idCardSupabaseClient || null;
+    const authChannel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("idcard-auth") : null;
+    const cloudStore = window.idCardCloudStore;
+
+    function getStoreItem(key) {
+      return cloudStore ? cloudStore.getItem(key) : null;
+    }
+
+    function setStoreItem(key, value) {
+      if (!cloudStore) return;
+      cloudStore.setItem(key, value);
+    }
+
+    function removeStoreItem(key) {
+      if (!cloudStore) return;
+      cloudStore.removeItem(key);
+    }
+    const searchEmployeeNoInput = document.getElementById("searchEmployeeNo");
+    const searchBtn = document.getElementById("searchBtn");
+    const showAllBtn = document.getElementById("showAllBtn");
+    const backToAdminBtn = document.getElementById("backToAdminBtn");
+    const selectAllVisibleInput = document.getElementById("selectAllVisible");
+    const clearSelectionBtn = document.getElementById("clearSelectionBtn");
+    const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
+    const selectionInfo = document.getElementById("selectionInfo");
+    const statusText = document.getElementById("statusText");
+    const resultsWrap = document.getElementById("resultsWrap");
+    const deleteConfirmModal = document.getElementById("deleteConfirmModal");
+    const deleteConfirmText = document.getElementById("deleteConfirmText");
+    const deleteConfirmCancel = document.getElementById("deleteConfirmCancel");
+    const deleteConfirmOk = document.getElementById("deleteConfirmOk");
+    const deleteAuthModal = document.getElementById("deleteAuthModal");
+    const deleteAuthForm = document.getElementById("deleteAuthForm");
+    const deleteAuthRole = document.getElementById("deleteAuthRole");
+    const deleteAuthUsername = document.getElementById("deleteAuthUsername");
+    const deleteAuthPassword = document.getElementById("deleteAuthPassword");
+    const deleteAuthCancel = document.getElementById("deleteAuthCancel");
+    const deleteAuthError = document.getElementById("deleteAuthError");
+    const previewLightbox = document.getElementById("previewLightbox");
+    const previewLightboxImg = document.getElementById("previewLightboxImg");
+    const previewLightboxTitle = document.getElementById("previewLightboxTitle");
+    const previewLightboxClose = document.getElementById("previewLightboxClose");
+    const creatorCreditPhoto = document.getElementById("creatorCreditPhoto");
+    const creatorCreditText = document.getElementById("creatorCreditText");
+    function readCreatorCreditValue(key) {
+      const cloudValue = getStoreItem(key);
+      if (cloudValue !== null && cloudValue !== undefined && cloudValue !== "") {
+        try {
+          window.localStorage.setItem(key, String(cloudValue));
+        } catch {}
+        return cloudValue;
+      }
+      try {
+        const local = window.localStorage.getItem(key);
+        if (local !== null && local !== undefined && local !== "") return local;
+      } catch {}
+      return null;
+    }
+    let approveLoadingOverlay = null;
+    const refreshLoadingOverlay = document.getElementById("refreshLoadingOverlay");
+    let approveLoadingPercent = null;
+    let approveLoadingFill = null;
+    let deleteConfirmResolve;
+    let deleteAuthResolve;
+    let activeViewRecordIds = [];
+    const selectedRecordIds = new Set();
+    let navigationInProgress = false;
+
+    function navigateWithTransition(url, { replace = false, delay = 210 } = {}) {
+      if (!url || navigationInProgress) return;
+      navigationInProgress = true;
+      if (document.body) document.body.classList.add("page-leave");
+      setTimeout(() => {
+        if (replace) {
+          window.location.replace(url);
+          return;
+        }
+        window.location.href = url;
+      }, Math.max(0, delay));
+    }
+
+    function applyInterfaceTheme() {
+      let isDarkMode = false;
+      try {
+        const saved = getStoreItem(interfaceThemeStorageKey);
+        if (saved === "dark" || saved === "light") {
+          isDarkMode = saved === "dark";
+        } else {
+          isDarkMode = true;
+        }
+      } catch {
+        isDarkMode = false;
+      }
+      document.body.classList.toggle("theme-dark", isDarkMode);
+    }
+
+    let approvedIdsCache = [];
+    let approvedIdsLastSync = 0;
+    let approvedIdsFetchPromise = null;
+    const APPROVED_IDS_CACHE_MS = 5 * 60 * 1000;
+    const APPROVED_IDS_PAGE_SIZE = 300;
+    const APPROVED_IDS_BG_PAGE_SIZE = 800;
+    let approvedIdsLoadingAll = false;
+    let approvedIdsLoadedAll = false;
+    let activeSearchQuery = "";
+    let delayedRefreshTimer = null;
+    let pendingApproveOverlay = false;
+    let approveProgressTimer = null;
+    let approveProgressValue = 0;
+    let refreshLoadingActive = false;
+
+    function ensureApproveOverlay() {
+      if (approveLoadingOverlay) return;
+      approveLoadingOverlay = document.createElement("div");
+      approveLoadingOverlay.id = "approveLoadingOverlay";
+      approveLoadingOverlay.className = "approve-loading-overlay";
+      approveLoadingOverlay.hidden = true;
+      approveLoadingOverlay.setAttribute("aria-live", "polite");
+      approveLoadingOverlay.setAttribute("aria-busy", "true");
+      approveLoadingOverlay.innerHTML = `
+        <div class="approve-loading-card">
+          <div>Loading approved ID preview…</div>
+          <div class="approve-loading-bar" aria-hidden="true">
+            <div id="approveLoadingFill" class="approve-loading-fill"></div>
+          </div>
+          <div id="approveLoadingPercent" class="approve-loading-percent">0%</div>
+        </div>
+      `;
+      document.body.appendChild(approveLoadingOverlay);
+      approveLoadingPercent = approveLoadingOverlay.querySelector("#approveLoadingPercent");
+      approveLoadingFill = approveLoadingOverlay.querySelector("#approveLoadingFill");
+    }
+
+    function showRefreshLoading() {
+      refreshLoadingActive = true;
+      if (refreshLoadingOverlay) {
+        refreshLoadingOverlay.hidden = false;
+        refreshLoadingOverlay.style.display = "grid";
+      }
+    }
+
+    function hideRefreshLoading() {
+      refreshLoadingActive = false;
+      if (refreshLoadingOverlay) {
+        refreshLoadingOverlay.hidden = true;
+        refreshLoadingOverlay.style.display = "none";
+      }
+    }
+
+    function startApproveProgress() {
+      ensureApproveOverlay();
+      if (!approveLoadingPercent) return;
+      approveProgressValue = 8;
+      approveLoadingPercent.textContent = `${approveProgressValue}%`;
+      if (approveLoadingFill) approveLoadingFill.style.width = `${approveProgressValue}%`;
+      if (approveProgressTimer) clearInterval(approveProgressTimer);
+      approveProgressTimer = setInterval(() => {
+        if (approveProgressValue >= 92) return;
+        approveProgressValue += Math.max(1, Math.round((100 - approveProgressValue) * 0.08));
+        approveProgressValue = Math.min(92, approveProgressValue);
+        approveLoadingPercent.textContent = `${approveProgressValue}%`;
+        if (approveLoadingFill) approveLoadingFill.style.width = `${approveProgressValue}%`;
+      }, 220);
+    }
+
+    function stopApproveProgress() {
+      if (approveProgressTimer) clearInterval(approveProgressTimer);
+      approveProgressTimer = null;
+      if (approveLoadingPercent) approveLoadingPercent.textContent = "100%";
+      if (approveLoadingFill) approveLoadingFill.style.width = "100%";
+    }
+
+    function loadApprovedIds() {
+      return Array.isArray(approvedIdsCache) ? approvedIdsCache : [];
+    }
+
+    function setApprovedIdsCache(records) {
+      approvedIdsCache = Array.isArray(records) ? records : [];
+      approvedIdsLastSync = Date.now();
+    }
+
+    function saveApprovedIds(records, changedRecords) {
+      setApprovedIdsCache(records);
+      if (Array.isArray(changedRecords)) {
+        if (!changedRecords.length) return;
+        syncApprovedIdsToCloud(changedRecords).catch((err) => {
+          console.warn("Supabase save sync failed:", err && err.message ? err.message : err);
+        });
+        return;
+      }
+      syncApprovedIdsToCloud(records).catch((err) => {
+        console.warn("Supabase save sync failed:", err && err.message ? err.message : err);
+      });
+    }
+
+    function mapCloudRowToApprovedRecord(row) {
+      if (!row || typeof row !== "object") return null;
+      return {
+        id: row.id || "",
+        approvedAt: row.approved_at || "",
+        employeeNo: row.employee_no || "",
+        employeeName: row.employee_name || "",
+        position: row.position || "",
+        validUntil: row.valid_until || "N/A",
+        qrToken: row.qr_token || "",
+        qrValue: row.qr_value || "",
+        previewUrl: row.preview_url || "",
+        frontImage: row.front_image || "",
+        backImage: row.back_image || ""
+      };
+    }
+
+    function mapApprovedRecordToCloudRow(record) {
+      const safe = record && typeof record === "object" ? record : {};
+      return {
+        id: String(safe.id || ""),
+        approved_at: safe.approvedAt || new Date().toISOString(),
+        employee_no: safe.employeeNo || "",
+        employee_name: safe.employeeName || "",
+        position: safe.position || "",
+        valid_until: safe.validUntil || "N/A",
+        qr_token: safe.qrToken || "",
+        qr_value: safe.qrValue || "",
+        preview_url: safe.previewUrl || "",
+        front_image: safe.frontImage || "",
+        back_image: safe.backImage || ""
+      };
+    }
+
+    async function fetchApprovedIdsPage(offset, limit) {
+      if (!supabaseClient) return [];
+      const from = Math.max(0, Number(offset) || 0);
+      const to = Math.max(from, from + Math.max(1, Number(limit) || 1) - 1);
+      const { data, error } = await supabaseClient
+        .from("id_records")
+        .select("id, approved_at, employee_no, employee_name, position, valid_until, qr_token, qr_value, preview_url, front_image, back_image")
+        .order("approved_at", { ascending: false })
+        .range(from, to);
+      if (error) throw error;
+      return Array.isArray(data)
+        ? data.map(mapCloudRowToApprovedRecord).filter(Boolean)
+        : [];
+    }
+
+    async function syncApprovedIdsFromCloud({ force = false } = {}) {
+      if (!supabaseClient) return loadApprovedIds();
+      const now = Date.now();
+      if (!force && approvedIdsCache.length && now - approvedIdsLastSync < APPROVED_IDS_CACHE_MS) {
+        return approvedIdsCache;
+      }
+      if (approvedIdsFetchPromise) return approvedIdsFetchPromise;
+      approvedIdsFetchPromise = (async () => {
+        approvedIdsLoadingAll = true;
+        approvedIdsLoadedAll = false;
+        const firstPage = await fetchApprovedIdsPage(0, APPROVED_IDS_PAGE_SIZE);
+        setApprovedIdsCache(firstPage);
+        approvedIdsLoadedAll = firstPage.length < APPROVED_IDS_PAGE_SIZE;
+        approvedIdsLoadingAll = !approvedIdsLoadedAll;
+        if (!approvedIdsLoadedAll) {
+          loadRemainingApprovedIdsInBackground().catch(() => {});
+        }
+        return firstPage;
+      })();
+      try {
+        return await approvedIdsFetchPromise;
+      } finally {
+        approvedIdsFetchPromise = null;
+      }
+    }
+
+    async function loadRemainingApprovedIdsInBackground() {
+      if (!supabaseClient || approvedIdsLoadedAll || !approvedIdsLoadingAll) return;
+      let offset = approvedIdsCache.length;
+      while (true) {
+        const batch = await fetchApprovedIdsPage(offset, APPROVED_IDS_BG_PAGE_SIZE);
+        if (!batch.length) {
+          approvedIdsLoadedAll = true;
+          approvedIdsLoadingAll = false;
+          return;
+        }
+        const merged = approvedIdsCache.concat(batch);
+        setApprovedIdsCache(merged);
+        offset = merged.length;
+        if (batch.length < APPROVED_IDS_BG_PAGE_SIZE) {
+          approvedIdsLoadedAll = true;
+          approvedIdsLoadingAll = false;
+          return;
+        }
+        if (!activeSearchQuery) {
+          doSearch();
+        }
+      }
+    }
+
+    async function fetchApprovedIdsByQuery(query) {
+      if (!supabaseClient) return [];
+      const safeQuery = String(query || "").trim().replace(/[%_,]/g, " ").replace(/\s+/g, " ").trim();
+      if (!safeQuery) return [];
+      const { data, error } = await supabaseClient
+        .from("id_records")
+        .select("id, approved_at, employee_no, employee_name, position, valid_until, qr_token, qr_value, preview_url, front_image, back_image")
+        .or(`employee_no.ilike.%${safeQuery}%,employee_name.ilike.%${safeQuery}%`);
+      if (error) throw error;
+      return Array.isArray(data)
+        ? data.map(mapCloudRowToApprovedRecord).filter(Boolean)
+        : [];
+    }
+
+    async function syncApprovedIdsToCloud(records) {
+      if (!supabaseClient) return;
+      const rows = (Array.isArray(records) ? records : [])
+        .map(mapApprovedRecordToCloudRow)
+        .filter((item) => item.id);
+
+      if (rows.length) {
+        const { error: upsertError } = await supabaseClient
+          .from("id_records")
+          .upsert(rows, { onConflict: "id" });
+        if (upsertError) throw upsertError;
+      }
+    }
+
+    async function deleteApprovedIdsByIdCloud(recordIds) {
+      if (!supabaseClient) return;
+      const ids = (Array.isArray(recordIds) ? recordIds : [])
+        .map((id) => String(id || "").trim())
+        .filter(Boolean);
+      if (!ids.length) return;
+      const { error } = await supabaseClient
+        .from("id_records")
+        .delete()
+        .in("id", ids);
+      if (error) throw error;
+    }
+
+    function normalizeRecordId(record, index) {
+      if (record && (typeof record.id === "number" || typeof record.id === "string")) {
+        return String(record.id);
+      }
+      return `idx-${index}`;
+    }
+
+    function resolvePreviewUrl(pathWithQuery) {
+      const relativePath = String(pathWithQuery || "").trim();
+      if (!relativePath) return "";
+      try {
+        const preferredBase = getStoreItem(qrPublicBaseUrlStorageKey);
+        if (preferredBase && preferredBase.trim()) {
+          return new URL(relativePath, preferredBase.trim()).href;
+        }
+      } catch {}
+      try {
+        return new URL(relativePath, window.location.href).href;
+      } catch {}
+      return relativePath;
+    }
+
+    function buildPreviewUrl(record, index) {
+      const saved = record && typeof record.previewUrl === "string" ? record.previewUrl.trim() : "";
+      if (saved) return saved;
+      const qrValue = record && typeof record.qrValue === "string" ? record.qrValue.trim() : "";
+      if (qrValue) return qrValue;
+      const token = record && typeof record.qrToken === "string" ? record.qrToken.trim() : "";
+      if (token) {
+        const safeToken = encodeURIComponent(token);
+        return resolvePreviewUrl(`p.html?t=${safeToken}`);
+      }
+      const safeId = encodeURIComponent(normalizeRecordId(record, index));
+      return resolvePreviewUrl(`id-preview.html?i=${safeId}`);
+    }
+
+    function getValidityText(record) {
+      if (!record) return "N/A";
+      const text = typeof record.validUntil === "string" ? record.validUntil.trim() : "";
+      return text || "N/A";
+    }
+
+    function parseValidityDate(value) {
+      const raw = String(value || "").trim();
+      if (!raw) return null;
+      const normalized = raw.toUpperCase();
+      if (normalized === "N/A" || normalized === "NA" || normalized === "NONE") return null;
+
+      let match = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+      if (match) {
+        const month = Number(match[1]);
+        const day = Number(match[2]);
+        const year = Number(match[3]);
+        const dt = new Date(year, month - 1, day);
+        if (dt.getFullYear() === year && dt.getMonth() === month - 1 && dt.getDate() === day) {
+          return dt;
+        }
+        return null;
+      }
+
+      match = raw.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+      if (match) {
+        const year = Number(match[1]);
+        const month = Number(match[2]);
+        const day = Number(match[3]);
+        const dt = new Date(year, month - 1, day);
+        if (dt.getFullYear() === year && dt.getMonth() === month - 1 && dt.getDate() === day) {
+          return dt;
+        }
+        return null;
+      }
+
+      return null;
+    }
+
+    function getCardStatus(validityText) {
+      const validityDate = parseValidityDate(validityText);
+      if (!validityDate) return "No Expiry";
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      validityDate.setHours(0, 0, 0, 0);
+      return validityDate <= today ? "Expired" : "Active";
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function pruneSelection(records) {
+      const validIds = new Set((records || []).map((item, index) => normalizeRecordId(item, index)));
+      Array.from(selectedRecordIds).forEach((id) => {
+        if (!validIds.has(id)) selectedRecordIds.delete(id);
+      });
+    }
+
+    function updateSelectionUi() {
+      const selectedCount = selectedRecordIds.size;
+      if (selectionInfo) {
+        const shownCount = activeViewRecordIds.length;
+        selectionInfo.textContent = shownCount
+          ? `${selectedCount} selected (${shownCount} shown)`
+          : `${selectedCount} selected`;
+      }
+      if (clearSelectionBtn) clearSelectionBtn.disabled = selectedCount === 0;
+      if (deleteSelectedBtn) deleteSelectedBtn.disabled = selectedCount === 0;
+      if (!selectAllVisibleInput) return;
+      const shown = activeViewRecordIds.length;
+      if (!shown) {
+        selectAllVisibleInput.checked = false;
+        selectAllVisibleInput.indeterminate = false;
+        selectAllVisibleInput.disabled = true;
+        return;
+      }
+      selectAllVisibleInput.disabled = false;
+      const selectedShownCount = activeViewRecordIds.reduce(
+        (acc, id) => acc + (selectedRecordIds.has(id) ? 1 : 0),
+        0
+      );
+      selectAllVisibleInput.checked = selectedShownCount === shown;
+      selectAllVisibleInput.indeterminate = selectedShownCount > 0 && selectedShownCount < shown;
+    }
+
+    function syncRecordSelectionStyles() {
+      resultsWrap.querySelectorAll(".record").forEach((el) => {
+        const id = el.dataset.recordId;
+        const selected = !!id && selectedRecordIds.has(id);
+        el.classList.toggle("selected", selected);
+        const input = el.querySelector('input[data-action="select-record"]');
+        if (input) input.checked = selected;
+      });
+    }
+
+    function renderRecords(records, label) {
+      activeViewRecordIds = [];
+      resultsWrap.textContent = "";
+      if (!records.length) {
+        statusText.textContent = label || "No approved ID preview found.";
+        updateSelectionUi();
+        if (refreshLoadingActive) hideRefreshLoading();
+        return;
+      }
+
+      const frag = document.createDocumentFragment();
+      records.forEach((record, index) => {
+        const recordId = normalizeRecordId(record, index);
+        const employeeNo = escapeHtml(record.employeeNo || "-");
+        const employeeName = escapeHtml(record.employeeName || "-");
+        const position = escapeHtml(record.position || "-");
+        const validityTextRaw = getValidityText(record);
+        const validUntil = escapeHtml(validityTextRaw);
+        const validityStatus = getCardStatus(validityTextRaw);
+        const validityStatusClass = validityStatus === "Expired"
+          ? "status-expired"
+          : validityStatus === "Active"
+            ? "status-active"
+            : "status-no-expiry";
+        const previewUrl = escapeHtml(buildPreviewUrl(record, index));
+        const frontImage = escapeHtml(record.frontImage || "");
+        const backImage = escapeHtml(record.backImage || "");
+        const item = document.createElement("article");
+        item.className = "record";
+        item.dataset.recordId = recordId;
+        if (selectedRecordIds.has(recordId)) item.classList.add("selected");
+        activeViewRecordIds.push(recordId);
+        item.innerHTML = `
+          <div class="record-select">
+            <label>
+              <input type="checkbox" data-action="select-record" ${selectedRecordIds.has(recordId) ? "checked" : ""} />
+              Select for bulk delete
+            </label>
+          </div>
+          <div class="record-meta">
+            <div><strong>Employee No:</strong> <span data-field="employeeNo">${employeeNo}</span></div>
+            <div><strong>Name:</strong> <span data-field="employeeName">${employeeName}</span></div>
+            <div><strong>Position:</strong> <span data-field="position">${position}</span></div>
+            <div><strong>Card Validity:</strong> <span data-field="validUntil">${validUntil}</span></div>
+            <div><strong>Status:</strong> <span data-field="validityStatus" class="${validityStatusClass}">${validityStatus}</span></div>
+          </div>
+          <div class="record-preview">
+            <img alt="ID Front Preview" src="${frontImage}" />
+            <img alt="ID Back Preview" src="${backImage}" />
+          </div>
+          <div class="record-link">
+            <strong>QR Code URL</strong>
+            <a href="${previewUrl}" target="_blank" rel="noopener noreferrer">${previewUrl}</a>
+          </div>
+          <div class="record-actions">
+            <button class="btn btn-mini" type="button" data-action="download-front">⬇ Front</button>
+            <button class="btn btn-mini" type="button" data-action="download-back">⬇ Back</button>
+            <button class="btn btn-mini" type="button" data-action="download-both">⬇ Both</button>
+            <button class="btn" type="button" data-action="edit">Modify</button>
+            <button class="btn btn-danger" type="button" data-action="delete">Delete</button>
+          </div>
+          <form class="edit-form" hidden>
+            <label>Employee No<input name="employeeNo" value="${escapeHtml(record.employeeNo || "")}" /></label>
+            <label>Name<input name="employeeName" value="${escapeHtml(record.employeeName || "")}" /></label>
+            <label>Position<input name="position" value="${escapeHtml(record.position || "")}" /></label>
+            <label>Card Validity<input name="validUntil" placeholder="MM/DD/YYYY or N/A" value="${escapeHtml(getValidityText(record))}" /></label>
+            <div class="record-actions">
+              <button class="btn" type="submit">Save</button>
+              <button class="btn" type="button" data-action="cancel-edit">Cancel</button>
+            </div>
+          </form>
+        `;
+        frag.appendChild(item);
+      });
+
+      resultsWrap.appendChild(frag);
+      statusText.textContent = label || `Showing ${records.length} approved ID preview(s).`;
+      updateSelectionUi();
+      if (refreshLoadingActive) {
+        const images = Array.from(resultsWrap.querySelectorAll(".record-preview img"));
+        if (!images.length) {
+          hideRefreshLoading();
+        } else {
+          const firstPair = images.slice(0, 2);
+          const waitForImageReady = (img) => {
+            if (!img) return Promise.resolve();
+            if (img.complete && img.naturalWidth) return Promise.resolve();
+            if (typeof img.decode === "function") {
+              return img.decode().catch(() => {});
+            }
+            return new Promise((resolve) => {
+              img.addEventListener("load", resolve, { once: true });
+              img.addEventListener("error", resolve, { once: true });
+            });
+          };
+          Promise.race([
+            Promise.all(firstPair.map(waitForImageReady)),
+            new Promise((resolve) => setTimeout(resolve, 5000))
+          ]).then(() => {
+            hideRefreshLoading();
+          });
+        }
+      }
+      if (approveLoadingOverlay && !approveLoadingOverlay.hidden && records.length) {
+        const images = Array.from(resultsWrap.querySelectorAll("img"));
+        const hideOverlay = () => {
+          if (approveLoadingOverlay) {
+            approveLoadingOverlay.hidden = true;
+            approveLoadingOverlay.style.display = "none";
+          }
+          stopApproveProgress();
+          removeStoreItem(approvedIdsPendingOverlayKey);
+          pendingApproveOverlay = false;
+        };
+        if (!images.length) {
+          hideOverlay();
+          return;
+        }
+        let settled = false;
+        const onDone = () => {
+          if (settled) return;
+          settled = true;
+          hideOverlay();
+        };
+        const firstImage = images[0];
+        if (firstImage.complete) {
+          onDone();
+          return;
+        }
+        firstImage.addEventListener("load", onDone, { once: true });
+        firstImage.addEventListener("error", onDone, { once: true });
+        setTimeout(onDone, 3000);
+      }
+    }
+
+    function findRecordIndexById(records, recordId) {
+      return records.findIndex((item, index) => normalizeRecordId(item, index) === recordId);
+    }
+
+    function doSearch() {
+      const query = (searchEmployeeNoInput.value || "").trim().toLowerCase();
+      activeSearchQuery = query;
+      const records = loadApprovedIds();
+      pruneSelection(records);
+      if (!query) {
+        const label = approvedIdsLoadingAll
+          ? `Showing latest approved IDs (${records.length}). Loading more...`
+          : `Showing all approved ID previews (${records.length}).`;
+        renderRecords(records, label);
+        return;
+      }
+
+      const filtered = records.filter((item) => {
+        const idNo = typeof item.employeeNo === "string" ? item.employeeNo.trim().toLowerCase() : "";
+        const name = typeof item.employeeName === "string" ? item.employeeName.trim().toLowerCase() : "";
+        return idNo.includes(query) || name.includes(query);
+      });
+
+      renderRecords(filtered, filtered.length
+        ? `Found ${filtered.length} record(s) for Employee No/Name "${query}".`
+        : "Searching cloud...");
+
+      if (approvedIdsLoadingAll) {
+        fetchApprovedIdsByQuery(query)
+          .then((cloudMatches) => {
+            if (activeSearchQuery !== query) return;
+            renderRecords(cloudMatches, cloudMatches.length
+              ? `Found ${cloudMatches.length} record(s) for Employee No/Name "${query}".`
+              : "No ID preview found for that Employee No or Name.");
+          })
+          .catch(() => {});
+      }
+    }
+
+    function doShowAll() {
+      searchEmployeeNoInput.value = "";
+      activeSearchQuery = "";
+      const records = loadApprovedIds();
+      pruneSelection(records);
+      const label = approvedIdsLoadingAll
+        ? `Showing latest approved IDs (${records.length}). Loading more...`
+        : `Showing all approved ID previews (${records.length}).`;
+      renderRecords(records, label);
+    }
+
+    function readCredentials(storageKey, fallbackUsername, fallbackPassword) {
+      try {
+        const raw = getStoreItem(storageKey);
+        if (!raw) {
+          return { username: fallbackUsername, password: fallbackPassword };
+        }
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") {
+          return { username: fallbackUsername, password: fallbackPassword };
+        }
+        const username = typeof parsed.username === "string" && parsed.username.trim()
+          ? parsed.username.trim()
+          : fallbackUsername;
+        const password = typeof parsed.password === "string" && parsed.password
+          ? parsed.password
+          : fallbackPassword;
+        return { username, password };
+      } catch {
+        return { username: fallbackUsername, password: fallbackPassword };
+      }
+    }
+
+    function closeDeleteAuth(result) {
+      if (deleteAuthModal) deleteAuthModal.hidden = true;
+      const resolve = deleteAuthResolve;
+      deleteAuthResolve = undefined;
+      if (resolve) resolve(result);
+    }
+
+    function openDeleteAuth() {
+      return new Promise((resolve) => {
+        deleteAuthResolve = resolve;
+        if (deleteAuthRole) deleteAuthRole.value = "admin";
+        if (deleteAuthUsername) deleteAuthUsername.value = "";
+        if (deleteAuthPassword) deleteAuthPassword.value = "";
+        if (deleteAuthError) deleteAuthError.hidden = true;
+        if (deleteAuthModal) deleteAuthModal.hidden = false;
+        if (deleteAuthUsername) setTimeout(() => deleteAuthUsername.focus(), 0);
+      });
+    }
+
+    function submitDeleteAuthCredentials() {
+      const role = deleteAuthRole ? deleteAuthRole.value : "admin";
+      const username = deleteAuthUsername ? (deleteAuthUsername.value || "").trim() : "";
+      const password = deleteAuthPassword ? (deleteAuthPassword.value || "") : "";
+      const superAdminCreds = readCredentials(superAdminCredentialsStorageKey, "superadmin", "admin123");
+      const adminCreds = readCredentials(adminCredentialsStorageKey, "admin", "admin123");
+      const expected = role === "superadmin" ? superAdminCreds : adminCreds;
+
+      if (username === expected.username && password === expected.password) {
+        if (deleteAuthError) deleteAuthError.hidden = true;
+        closeDeleteAuth(true);
+        return;
+      }
+
+      if (deleteAuthError) deleteAuthError.hidden = false;
+    }
+
+    function closeDeleteConfirm(result) {
+      if (deleteConfirmModal) deleteConfirmModal.hidden = true;
+      const resolve = deleteConfirmResolve;
+      deleteConfirmResolve = undefined;
+      if (resolve) resolve(result);
+    }
+
+    function openDeleteConfirm(message) {
+      return new Promise((resolve) => {
+        deleteConfirmResolve = resolve;
+        if (deleteConfirmText) {
+          deleteConfirmText.textContent = message || "Are you sure you want to delete selected approved ID(s)? This action cannot be undone.";
+        }
+        if (deleteConfirmModal) deleteConfirmModal.hidden = false;
+      });
+    }
+
+    function runDeleteFlow(confirmMessage, onDelete) {
+      openDeleteAuth()
+        .then((authorized) => {
+          if (!authorized) return false;
+          return openDeleteConfirm(confirmMessage);
+        })
+        .then((ok) => {
+          if (!ok) return;
+          const result = onDelete();
+          if (result && typeof result.then === "function") {
+            result.catch((err) => {
+              statusText.textContent = `Delete failed: ${err && err.message ? err.message : err}`;
+            });
+          }
+        });
+    }
+
+    function openPreviewLightbox(imageSrc, titleText) {
+      if (!previewLightbox || !previewLightboxImg) return;
+      previewLightboxImg.src = imageSrc || "";
+      if (previewLightboxTitle) {
+        previewLightboxTitle.textContent = titleText || "ID Preview";
+      }
+      previewLightbox.hidden = false;
+    }
+
+    function closePreviewLightbox() {
+      if (!previewLightbox || !previewLightboxImg) return;
+      previewLightbox.hidden = true;
+      previewLightboxImg.src = "";
+    }
+
+    function makeSafeFilePart(value, fallback) {
+      const raw = String(value || "").trim();
+      const cleaned = raw.replace(/[^a-z0-9\-_]+/gi, "_").replace(/^_+|_+$/g, "");
+      return cleaned || fallback;
+    }
+
+    function dataUrlToBlob(dataUrl) {
+      const parts = String(dataUrl || "").split(",");
+      if (parts.length < 2) return null;
+      const meta = parts[0];
+      const b64 = parts[1];
+      const mimeMatch = meta.match(/data:(.*?);base64/);
+      const mime = mimeMatch ? mimeMatch[1] : "image/png";
+      const binary = atob(b64);
+      const len = binary.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i += 1) bytes[i] = binary.charCodeAt(i);
+      return new Blob([bytes], { type: mime });
+    }
+
+    function downloadImageDataUrl(dataUrl, fileName) {
+      if (!dataUrl || typeof dataUrl !== "string") return false;
+      const blob = dataUrlToBlob(dataUrl);
+      if (!blob) return false;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1200);
+      return true;
+    }
+
+    function handleResultsClick(evt) {
+      const clickedPreview = evt.target.closest(".record-preview img");
+      if (clickedPreview) {
+        const recordEl = clickedPreview.closest(".record");
+        if (!recordEl) return;
+        const side = clickedPreview.alt && clickedPreview.alt.toLowerCase().includes("back")
+          ? "Back"
+          : "Front";
+        const name = recordEl.querySelector('[data-field="employeeName"]')
+          ? recordEl.querySelector('[data-field="employeeName"]').textContent
+          : "Employee";
+        const empNo = recordEl.querySelector('[data-field="employeeNo"]')
+          ? recordEl.querySelector('[data-field="employeeNo"]').textContent
+          : "-";
+        openPreviewLightbox(clickedPreview.src, `${side} ID Preview - ${name} (${empNo})`);
+        return;
+      }
+
+      const btn = evt.target.closest("button[data-action]");
+      if (!btn) return;
+      const action = btn.dataset.action;
+      const recordEl = btn.closest(".record");
+      if (!recordEl) return;
+      const recordId = recordEl.dataset.recordId;
+      const editForm = recordEl.querySelector(".edit-form");
+
+      if (action === "edit") {
+        if (editForm) editForm.hidden = false;
+        return;
+      }
+
+      if (action === "cancel-edit") {
+        if (editForm) editForm.hidden = true;
+        return;
+      }
+
+      const records = loadApprovedIds();
+      const index = findRecordIndexById(records, recordId);
+      if (index < 0) return;
+      const selectedRecord = records[index];
+
+      if (action === "download-front" || action === "download-back" || action === "download-both") {
+        const employeeNo = makeSafeFilePart(selectedRecord && selectedRecord.employeeNo, "employee");
+        const employeeName = makeSafeFilePart(selectedRecord && selectedRecord.employeeName, "id");
+        const base = `${employeeNo}_${employeeName}`;
+        let success = false;
+        if (action === "download-front" || action === "download-both") {
+          success = downloadImageDataUrl(selectedRecord.frontImage, `${base}_front.png`) || success;
+        }
+        if (action === "download-back" || action === "download-both") {
+          success = downloadImageDataUrl(selectedRecord.backImage, `${base}_back.png`) || success;
+        }
+        statusText.textContent = success
+          ? (action === "download-both"
+              ? "Front and back previews downloaded."
+              : action === "download-front"
+                ? "Front preview downloaded."
+                : "Back preview downloaded.")
+          : "Download failed. This preview data may be invalid.";
+        return;
+      }
+
+      if (action !== "delete") return;
+
+      const employeeNo = selectedRecord && selectedRecord.employeeNo ? selectedRecord.employeeNo : "";
+      runDeleteFlow(
+        `Delete approved ID for Employee No "${employeeNo || "-"}"? This action cannot be undone.`,
+        async () => {
+          const latest = loadApprovedIds();
+          const latestIndex = findRecordIndexById(latest, recordId);
+          if (latestIndex < 0) return;
+          const cloudId = String(latest[latestIndex] && latest[latestIndex].id ? latest[latestIndex].id : "").trim();
+          if (cloudId) {
+            try {
+              await deleteApprovedIdsByIdCloud([cloudId]);
+            } catch (err) {
+              statusText.textContent = `Cloud delete failed: ${err.message || err}`;
+              return;
+            }
+          }
+          latest.splice(latestIndex, 1);
+          selectedRecordIds.delete(recordId);
+          saveApprovedIds(latest, []);
+          doSearch();
+        }
+      );
+    }
+
+    function handleResultsChange(evt) {
+      const selectToggle = evt.target.closest('input[data-action="select-record"]');
+      if (!selectToggle) return;
+      const recordEl = selectToggle.closest(".record");
+      if (!recordEl) return;
+      const recordId = recordEl.dataset.recordId;
+      if (!recordId) return;
+      if (selectToggle.checked) {
+        selectedRecordIds.add(recordId);
+      } else {
+        selectedRecordIds.delete(recordId);
+      }
+      syncRecordSelectionStyles();
+      updateSelectionUi();
+    }
+
+    function clearSelection() {
+      selectedRecordIds.clear();
+      syncRecordSelectionStyles();
+      updateSelectionUi();
+    }
+
+    function deleteSelectedRecords() {
+      const selectedIds = Array.from(selectedRecordIds);
+      if (!selectedIds.length) {
+        statusText.textContent = "No selected records to delete.";
+        return;
+      }
+      runDeleteFlow(
+        `Delete ${selectedIds.length} selected approved ID(s)? This action cannot be undone.`,
+        async () => {
+          const latest = loadApprovedIds();
+          const deleteCloudIds = latest
+            .filter((item, index) => selectedRecordIds.has(normalizeRecordId(item, index)))
+            .map((item) => String(item && item.id ? item.id : "").trim())
+            .filter(Boolean);
+          if (deleteCloudIds.length) {
+            try {
+              await deleteApprovedIdsByIdCloud(deleteCloudIds);
+            } catch (err) {
+              statusText.textContent = `Cloud delete failed: ${err.message || err}`;
+              return;
+            }
+          }
+          const latestFiltered = latest.filter((item, index) => {
+            const id = normalizeRecordId(item, index);
+            return !selectedRecordIds.has(id);
+          });
+          const removedCount = latest.length - latestFiltered.length;
+          if (!removedCount) {
+            statusText.textContent = "Selected records were not found.";
+            return;
+          }
+          saveApprovedIds(latestFiltered, []);
+          clearSelection();
+          doSearch();
+          statusText.textContent = `${removedCount} approved ID record(s) deleted.`;
+        }
+      );
+    }
+
+    function handleEditSubmit(evt) {
+      const form = evt.target.closest(".edit-form");
+      if (!form) return;
+      evt.preventDefault();
+
+      const recordEl = form.closest(".record");
+      if (!recordEl) return;
+      const recordId = recordEl.dataset.recordId;
+
+      const employeeNo = ((form.elements.employeeNo && form.elements.employeeNo.value) || "").trim();
+      const employeeName = ((form.elements.employeeName && form.elements.employeeName.value) || "").trim();
+      const position = ((form.elements.position && form.elements.position.value) || "").trim();
+      const validUntil = ((form.elements.validUntil && form.elements.validUntil.value) || "").trim();
+
+      if (!employeeNo) {
+        statusText.textContent = "Employee No is required.";
+        return;
+      }
+
+      const records = loadApprovedIds();
+      const index = findRecordIndexById(records, recordId);
+      if (index < 0) return;
+
+      const duplicate = records.some((item, idx) => {
+        if (idx === index) return false;
+        const saved = typeof item.employeeNo === "string" ? item.employeeNo.trim().toLowerCase() : "";
+        return saved && saved === employeeNo.toLowerCase();
+      });
+      if (duplicate) {
+        statusText.textContent = "Employee No already exists. Use a unique Employee No.";
+        return;
+      }
+
+      records[index].employeeNo = employeeNo;
+      records[index].employeeName = employeeName;
+      records[index].position = position;
+      records[index].validUntil = validUntil || "N/A";
+      saveApprovedIds(records, [records[index]]);
+      doSearch();
+    }
+
+    searchBtn.addEventListener("click", doSearch);
+    showAllBtn.addEventListener("click", doShowAll);
+    if (selectAllVisibleInput) {
+      selectAllVisibleInput.addEventListener("change", () => {
+        if (selectAllVisibleInput.checked) {
+          activeViewRecordIds.forEach((id) => selectedRecordIds.add(id));
+        } else {
+          activeViewRecordIds.forEach((id) => selectedRecordIds.delete(id));
+        }
+        syncRecordSelectionStyles();
+        updateSelectionUi();
+      });
+    }
+    if (clearSelectionBtn) {
+      clearSelectionBtn.addEventListener("click", clearSelection);
+    }
+    if (deleteSelectedBtn) {
+      deleteSelectedBtn.addEventListener("click", deleteSelectedRecords);
+    }
+    if (backToAdminBtn) {
+      backToAdminBtn.addEventListener("click", () => {
+        try {
+          let role = "admin";
+          let unlocked = false;
+          const rawCtx = getStoreItem(approvedIdsNavContextKey);
+          if (rawCtx) {
+            const parsedCtx = JSON.parse(rawCtx);
+            if (parsedCtx && typeof parsedCtx === "object") {
+              role = parsedCtx.role === "superadmin" ? "superadmin" : "admin";
+              unlocked = !!parsedCtx.unlocked;
+            }
+          }
+          setStoreItem(
+            entryLoginSessionStorageKey,
+            JSON.stringify({ signedIn: true, role, source: "entry" })
+          );
+          if (role === "superadmin" || unlocked) {
+            setStoreItem(
+              adminSessionStorageKey,
+              JSON.stringify({ unlocked: true, lastActivity: Date.now() })
+            );
+          } else {
+            removeStoreItem(adminSessionStorageKey);
+          }
+        } catch {
+          // ignore storage errors and still navigate
+        }
+        navigateWithTransition("dashboard.html");
+      });
+    }
+    searchEmployeeNoInput.addEventListener("keydown", (evt) => {
+      if (evt.key === "Enter") doSearch();
+    });
+    searchEmployeeNoInput.addEventListener("input", doSearch);
+    document.addEventListener("keydown", (evt) => {
+      if (evt.key === "Escape" && previewLightbox && !previewLightbox.hidden) {
+        closePreviewLightbox();
+        return;
+      }
+      if (evt.key === "Escape" && deleteAuthModal && !deleteAuthModal.hidden) {
+        closeDeleteAuth(false);
+        return;
+      }
+      if (evt.key === "Escape" && deleteConfirmModal && !deleteConfirmModal.hidden) {
+        closeDeleteConfirm(false);
+      }
+    });
+    if (deleteAuthForm) {
+      deleteAuthForm.addEventListener("submit", (evt) => {
+        evt.preventDefault();
+        submitDeleteAuthCredentials();
+      });
+    }
+    [deleteAuthRole, deleteAuthUsername, deleteAuthPassword].forEach((el) => {
+      if (!el) return;
+      el.addEventListener("input", () => {
+        if (deleteAuthError) deleteAuthError.hidden = true;
+      });
+    });
+    if (deleteAuthCancel) {
+      deleteAuthCancel.addEventListener("click", () => closeDeleteAuth(false));
+    }
+    if (deleteAuthModal) {
+      deleteAuthModal.addEventListener("click", (evt) => {
+        if (evt.target === deleteAuthModal) closeDeleteAuth(false);
+      });
+    }
+    if (deleteConfirmCancel) {
+      deleteConfirmCancel.addEventListener("click", () => closeDeleteConfirm(false));
+    }
+    if (deleteConfirmOk) {
+      deleteConfirmOk.addEventListener("click", () => closeDeleteConfirm(true));
+    }
+    if (deleteConfirmModal) {
+      deleteConfirmModal.addEventListener("click", (evt) => {
+        if (evt.target === deleteConfirmModal) closeDeleteConfirm(false);
+      });
+    }
+    if (previewLightboxClose) {
+      previewLightboxClose.addEventListener("click", closePreviewLightbox);
+    }
+    if (previewLightbox) {
+      previewLightbox.addEventListener("click", (evt) => {
+        if (evt.target === previewLightbox) closePreviewLightbox();
+      });
+    }
+    window.addEventListener("id-card-store", (evt) => {
+      const key = evt && evt.detail ? evt.detail.key : "";
+      if (key === interfaceThemeStorageKey) applyInterfaceTheme();
+      if (key === creatorCreditPhotoStorageKey || key === creatorCreditTextStorageKey) {
+        loadFooterCredit();
+      }
+    });
+
+    function loadFooterCredit() {
+      try {
+        const savedPhoto = readCreatorCreditValue(creatorCreditPhotoStorageKey);
+        if (savedPhoto && creatorCreditPhoto) creatorCreditPhoto.src = savedPhoto;
+      } catch {
+        // ignore storage errors
+      }
+      try {
+        const savedText = readCreatorCreditValue(creatorCreditTextStorageKey);
+        if (savedText && savedText.trim() && creatorCreditText) {
+          creatorCreditText.textContent = savedText;
+        }
+      } catch {
+        // ignore storage errors
+      }
+    }
+
+    async function bootPage() {
+      applyInterfaceTheme();
+      loadFooterCredit();
+      if (!supabaseClient) {
+        statusText.textContent = "Supabase client unavailable.";
+        return;
+      }
+      try {
+        const { data } = await supabaseClient.auth.getSession();
+        if (!data || !data.session) {
+          statusText.textContent = "Please sign in to access approved IDs.";
+          navigateWithTransition("index.html", { replace: true, delay: 120 });
+          return;
+        }
+      } catch {
+        statusText.textContent = "Please sign in to access approved IDs.";
+        navigateWithTransition("index.html", { replace: true, delay: 120 });
+        return;
+      }
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const query = (params.get("q") || "").trim();
+        if (query && searchEmployeeNoInput) searchEmployeeNoInput.value = query;
+      } catch {
+        // ignore URL parse errors
+      }
+      resultsWrap.addEventListener("click", handleResultsClick);
+      resultsWrap.addEventListener("change", handleResultsChange);
+      resultsWrap.addEventListener("submit", handleEditSubmit);
+
+      statusText.textContent = "Loading approved IDs from cloud...";
+      const params = new URLSearchParams(window.location.search);
+      const hasApproveSrc = (params.get("src") || "") === "approve";
+      if (!hasApproveSrc) {
+        removeStoreItem(approvedIdsPendingOverlayKey);
+      }
+
+      const pendingRaw = getStoreItem(approvedIdsPendingOverlayKey);
+      const pendingTs = Number(pendingRaw || 0);
+      let fromApprove = false;
+      let isReload = false;
+      try {
+        const navEntry = performance.getEntriesByType("navigation")[0];
+        isReload = navEntry && navEntry.type === "reload";
+      } catch {}
+      try {
+        const ref = String(document.referrer || "");
+        fromApprove = hasApproveSrc && /dashboard\.html/i.test(ref) && !isReload;
+      } catch {}
+      if (!fromApprove) {
+        removeStoreItem(approvedIdsPendingOverlayKey);
+      }
+      pendingApproveOverlay = !!pendingTs && Date.now() - pendingTs < 15000 && fromApprove;
+      if (fromApprove) {
+        try {
+          const url = new URL(window.location.href);
+          url.searchParams.delete("src");
+          window.history.replaceState({}, document.title, url.toString());
+        } catch {}
+      }
+      if (pendingApproveOverlay) {
+        startApproveProgress();
+        if (approveLoadingOverlay) {
+          approveLoadingOverlay.hidden = false;
+          approveLoadingOverlay.style.display = "grid";
+        }
+      }
+      showRefreshLoading();
+      syncApprovedIdsFromCloud({ force: true })
+        .catch((err) => {
+          console.warn("Initial Supabase sync skipped:", err && err.message ? err.message : err);
+        })
+        .finally(() => {
+          doSearch();
+        });
+
+
+      if (delayedRefreshTimer) clearTimeout(delayedRefreshTimer);
+      delayedRefreshTimer = setTimeout(() => {
+        if (activeSearchQuery) return;
+        syncApprovedIdsFromCloud({ force: true })
+          .then(() => {
+            if (!activeSearchQuery) doSearch();
+          })
+          .catch(() => {});
+      }, 1500);
+
+      setTimeout(() => {
+        if (refreshLoadingActive) hideRefreshLoading();
+      }, 4000);
+    }
+
+    if (supabaseClient) {
+      supabaseClient.auth.onAuthStateChange((event) => {
+        if (event === "SIGNED_OUT") {
+          navigateWithTransition("index.html", { replace: true, delay: 120 });
+        }
+      });
+    }
+
+    if (authChannel) {
+      authChannel.addEventListener("message", (evt) => {
+        const msg = evt && evt.data ? evt.data : null;
+        if (!msg || msg.type !== "auth") return;
+        if (msg.state === "signed_out") {
+          navigateWithTransition("index.html", { replace: true, delay: 120 });
+        }
+      });
+    }
+
+    (window.__idCardCloudReady || Promise.resolve()).finally(bootPage);
+  </script>
+</body>
+</html>

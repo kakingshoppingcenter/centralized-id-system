@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signature Pad</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg-a: #1b2436;
+      --bg-b: #0e141f;
+      --panel: rgba(16, 22, 34, 0.92);
+      --ink: #e8eefc;
+      --muted: #b8c5de;
+      --accent: #2d5bde;
+      --accent-deep: #1f46b8;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      font-family: "Roboto Condensed", "Segoe UI", Arial, sans-serif;
+      background: radial-gradient(circle at top, var(--bg-a), var(--bg-b));
+      color: var(--ink);
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: none;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    header {
+      padding: 10px 14px 4px;
+      display: grid;
+      gap: 4px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #dbe7ff;
+    }
+
+    #status {
+      margin: 0;
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    .pad-wrap {
+      padding: 10px;
+      display: grid;
+      position: relative;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border-radius: 12px;
+      background: #fff;
+      touch-action: none;
+    }
+
+    .actions {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: inline-flex;
+      gap: 8px;
+      padding: 0;
+      z-index: 2;
+    }
+
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font: 700 0.62rem "Roboto Condensed", sans-serif;
+      letter-spacing: 0.04em;
+      color: #fff;
+      background: linear-gradient(160deg, var(--accent), var(--accent-deep));
+      cursor: pointer;
+      box-shadow: 0 6px 10px rgba(33, 74, 190, 0.25);
+      white-space: nowrap;
+    }
+
+    button.secondary {
+      background: linear-gradient(160deg, #58647c, #424d61);
+      box-shadow: 0 6px 10px rgba(35, 46, 70, 0.3);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Signature Pad</h1>
+    <p id="status">Loading...</p>
+  </header>
+  <div class="pad-wrap">
+    <div class="actions">
+      <button id="clearPad" class="secondary" type="button">Clear</button>
+      <button id="submitPad" type="button">Approve Signature</button>
+    </div>
+    <canvas id="signaturePad" aria-label="Signature drawing pad"></canvas>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const supabaseProjectUrl = "https://pboqhiwhkqfitxvbzbxt.supabase.co";
+    const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib3FoaXdoa3FmaXR4dmJ6Ynh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMDI4MzgsImV4cCI6MjA4NzU3ODgzOH0.H9DjOQmSop9e6O_z0uZgBNT2-WtuE4DJc4o1gFMs1do";
+    const client = window.supabase
+      ? window.supabase.createClient(supabaseProjectUrl, supabaseAnonKey, {
+          auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+        })
+      : null;
+
+    const statusEl = document.getElementById("status");
+    const pad = document.getElementById("signaturePad");
+    const clearBtn = document.getElementById("clearPad");
+    const submitBtn = document.getElementById("submitPad");
+    const token = "shared";
+
+    function setStatus(text, isError = false) {
+      statusEl.textContent = text;
+      statusEl.style.color = isError ? "#ffb0b0" : "#b8c5de";
+    }
+
+    if (!client) {
+      setStatus("Supabase client unavailable.", true);
+    } else {
+      setStatus("Draw your signature, then approve.");
+    }
+
+    const ctx = pad.getContext("2d");
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.lineWidth = 12;
+    ctx.strokeStyle = "#111";
+    let drawing = false;
+    let hasInk = false;
+
+    function resizeCanvas() {
+      if (!pad) return;
+      const rect = pad.getBoundingClientRect();
+      const prev = hasInk ? pad.toDataURL("image/png") : null;
+      const ratio = Math.max(1, window.devicePixelRatio || 1);
+      pad.width = Math.max(1, Math.floor(rect.width * ratio));
+      pad.height = Math.max(1, Math.floor(rect.height * ratio));
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.lineWidth = 12;
+      ctx.strokeStyle = "#111";
+      if (prev) {
+        const img = new Image();
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0, rect.width, rect.height);
+        };
+        img.src = prev;
+      }
+    }
+
+    function getPoint(evt) {
+      const rect = pad.getBoundingClientRect();
+      const x = evt.clientX - rect.left;
+      const y = evt.clientY - rect.top;
+      return { x, y };
+    }
+
+    function startDraw(evt) {
+      if (!token) return;
+      drawing = true;
+      const { x, y } = getPoint(evt);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    }
+
+    function draw(evt) {
+      if (!drawing) return;
+      const { x, y } = getPoint(evt);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      hasInk = true;
+    }
+
+    function endDraw() {
+      drawing = false;
+    }
+
+    pad.addEventListener("pointerdown", (evt) => {
+      evt.preventDefault();
+      startDraw(evt);
+    });
+    pad.addEventListener("pointermove", (evt) => {
+      evt.preventDefault();
+      draw(evt);
+    });
+    pad.addEventListener("pointerup", endDraw);
+    pad.addEventListener("pointerleave", endDraw);
+    pad.addEventListener("pointercancel", endDraw);
+
+    if (clearBtn) {
+      clearBtn.addEventListener("click", () => {
+        ctx.clearRect(0, 0, pad.width, pad.height);
+        hasInk = false;
+      });
+    }
+
+    if (submitBtn) {
+      submitBtn.addEventListener("click", async () => {
+        if (!client) return;
+        if (!hasInk) {
+          setStatus("Draw your signature first.", true);
+          return;
+        }
+        submitBtn.disabled = true;
+        const now = new Date().toISOString();
+        const dataUrl = pad.toDataURL("image/png");
+        try {
+          const { data, error } = await client
+            .from("signature_requests")
+            .upsert({ token, signature_data: dataUrl, used_at: now }, { onConflict: "token" })
+            .eq("token", token)
+            .is("used_at", null)
+            .select("token");
+          if (error) throw error;
+          if (!data || !data.length) {
+            setStatus("Token expired or already used.", true);
+            submitBtn.disabled = false;
+            return;
+          }
+          setStatus("Signature submitted. You can close this page.");
+          submitBtn.disabled = true;
+          if (clearBtn) clearBtn.disabled = true;
+        } catch (err) {
+          setStatus(`Submit failed: ${err.message || err}`, true);
+          submitBtn.disabled = false;
+        }
+      });
+    }
+
+    window.addEventListener("resize", () => requestAnimationFrame(resizeCanvas));
+    window.addEventListener("orientationchange", () => requestAnimationFrame(resizeCanvas));
+    requestAnimationFrame(resizeCanvas);
+  </script>
+</body>
+</html>

@@ -1,0 +1,720 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ID Card Dashboard</title>
+  <style>
+    html, body { visibility: hidden; }
+    html.theme-ready, body.theme-ready { visibility: visible; }
+  </style>
+  <script>
+    (function () {
+      try {
+        const savedTheme = window.localStorage.getItem("idCardCreatorInterfaceThemeV1");
+        if (!savedTheme) {
+          window.localStorage.setItem("idCardCreatorInterfaceThemeV1", "dark");
+          document.documentElement.classList.add("theme-dark");
+        } else if (savedTheme === "dark") {
+          document.documentElement.classList.add("theme-dark");
+        } else {
+          document.documentElement.classList.remove("theme-dark");
+        }
+      } catch {
+        document.documentElement.classList.add("theme-dark");
+      }
+      document.documentElement.classList.add("credit-loading");
+      try {
+        const hasPhoto = !!window.localStorage.getItem("idCardCreatorCreatorCreditPhotoV1");
+        const hasText = !!window.localStorage.getItem("idCardCreatorCreatorCreditTextV1");
+        if (hasPhoto || hasText) document.documentElement.classList.add("credit-has-local");
+      } catch {
+        // ignore storage errors
+      }
+      document.documentElement.classList.add("theme-ready");
+    })();
+  </script>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body.app-loading .app,
+    body.app-loading .app-credit,
+    body.app-loading .admin-login-modal {
+      filter: blur(6px);
+      pointer-events: none;
+      user-select: none;
+    }
+    .app-loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(120, 150, 210, 0.16), transparent 40%),
+        radial-gradient(circle at 80% 10%, rgba(255, 220, 160, 0.12), transparent 38%),
+        rgba(8, 12, 20, 0.08);
+      backdrop-filter: blur(6px);
+      color: #1d2f54;
+      font: 700 0.92rem "Roboto Condensed", "Segoe UI", Arial, sans-serif;
+      letter-spacing: 0.03em;
+    }
+    body.theme-dark .app-loading-overlay {
+      color: #e6eefc;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(80, 110, 170, 0.2), transparent 40%),
+        radial-gradient(circle at 80% 10%, rgba(200, 170, 110, 0.14), transparent 38%),
+        rgba(6, 8, 12, 0.32);
+    }
+    .app-loading-card {
+      min-width: min(360px, 82vw);
+      padding: 14px 16px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(90, 116, 170, 0.22);
+      background: rgba(255, 255, 255, 0.78);
+      box-shadow: 0 18px 32px rgba(0, 0, 0, 0.18);
+      display: grid;
+      gap: 10px;
+      text-align: center;
+    }
+    .app-loading-ring {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 3px solid rgba(44, 89, 210, 0.2);
+      border-top-color: rgba(44, 89, 210, 0.9);
+      animation: winRingSpin 0.9s linear infinite;
+      margin: 0 auto;
+    }
+    body.theme-dark .app-loading-card {
+      background: rgba(18, 22, 30, 0.82);
+      border-color: rgba(120, 146, 198, 0.28);
+    }
+    body.theme-dark .app-loading-ring {
+      border-color: rgba(140, 170, 230, 0.25);
+      border-top-color: rgba(160, 196, 255, 0.95);
+    }
+    @keyframes winRingSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="app-loading">
+  <script>
+    (function () {
+      try {
+        const saved = window.localStorage.getItem("idCardCreatorInterfaceThemeV1");
+        if (saved === "dark") {
+          document.body.classList.add("theme-dark");
+        } else {
+          document.body.classList.remove("theme-dark");
+        }
+      } catch {
+        document.body.classList.remove("theme-dark");
+      }
+      document.body.classList.add("theme-ready");
+    })();
+  </script>
+  <div id="appLoadingOverlay" class="app-loading-overlay" aria-live="polite" aria-busy="true">
+    <div class="app-loading-card">
+      <div>Loading admin interface…</div>
+      <div class="app-loading-ring" aria-hidden="true"></div>
+    </div>
+  </div>
+  <main class="app">
+    <section class="panel form-panel">
+      <div class="title-row">
+        <h1>ID Card Dashboard</h1>
+        <button id="entryLogoutBtn" type="button" hidden>Logout</button>
+      </div>
+      <p class="hint">Upload logo/profile/signature and fine-tune layout.</p>
+      <div class="admin-access" id="adminAccess">
+        <button id="adminLoginBtn" type="button">Super Admin</button>
+        <button id="adminLockBtn" type="button" hidden>Lock Settings</button>
+        <button id="themeToggleBtn" type="button" aria-pressed="false">Dark Mode</button>
+        <span id="adminAccessState">Settings are locked</span>
+      </div>
+      <p class="status" id="downloadStatus">&nbsp;</p>
+
+      <section id="adminSettingsPanel" class="admin-settings-panel">
+        <h2>Admin Settings</h2>
+        <div class="super-admin-tools">
+          <h3>Authentication</h3>
+          <p>Admin sign-in is now managed by Supabase Auth. Use the Supabase dashboard to create or reset the shared admin user.</p>
+        </div>
+        <div class="upload-grid">
+          <div class="control-box">
+            <div class="control-box-title">Company Logo Control</div>
+            <div class="photo-upload">
+              <label for="logoFile" class="upload-btn">Choose Company Logo</label>
+              <label class="upload-default-toggle" for="logoFileDefault">
+                <input id="logoFileDefault" type="checkbox" />
+                Default
+              </label>
+              <input id="logoFile" type="file" accept="image/*" />
+            </div>
+            <button id="logoAdjustToggle" type="button" class="company-adjust-toggle">Adjust Logo</button>
+            <div id="logoAdjustPanel" class="company-adjust-grid" hidden>
+              <label>Logo X <input id="logoX" type="range" min="-120" max="120" value="0" /></label>
+              <label>Logo Y <input id="logoY" type="range" min="-80" max="80" value="0" /></label>
+              <label>Scale <input id="logoScale" type="range" min="60" max="220" value="100" /></label>
+            </div>
+          </div>
+        </div>
+        <div class="admin-settings-grid">
+          <div class="control-box theme-tools">
+            <div class="control-box-title">Front Theme Control</div>
+            <label>Front Theme Source
+              <select id="frontThemeSource">
+                <option value="builtin">Built-in Theme</option>
+                <option value="file">Theme Photo File</option>
+              </select>
+            </label>
+            <label id="frontThemeBuiltinRow">Front Theme
+              <select id="frontTheme">
+                <option value="plain">Plain</option>
+                <option value="blue">Blue Wave</option>
+                <option value="emerald">Emerald</option>
+                <option value="sunset">Sunset</option>
+              </select>
+            </label>
+            <div id="frontThemeFileRow" class="photo-upload" hidden>
+              <label for="frontThemeFile" class="upload-btn">Choose Front Theme Photo</label>
+              <label class="upload-default-toggle" for="frontThemeFileDefault">
+                <input id="frontThemeFileDefault" type="checkbox" />
+                Default
+              </label>
+              <input id="frontThemeFile" type="file" accept="image/*" />
+            </div>
+          </div>
+          <div class="control-box theme-tools">
+            <div class="control-box-title">Back Theme Control</div>
+            <label>Back Theme Source
+              <select id="backThemeSource">
+                <option value="builtin">Built-in Theme</option>
+                <option value="file">Theme Photo File</option>
+              </select>
+            </label>
+            <label id="backThemeBuiltinRow">Back Theme
+              <select id="backTheme">
+                <option value="plain">Plain</option>
+                <option value="blue">Blue Wave</option>
+                <option value="emerald">Emerald</option>
+                <option value="sunset">Sunset</option>
+              </select>
+            </label>
+            <div id="backThemeFileRow" class="photo-upload" hidden>
+              <label for="backThemeFile" class="upload-btn">Choose Back Theme Photo</label>
+              <label class="upload-default-toggle" for="backThemeFileDefault">
+                <input id="backThemeFileDefault" type="checkbox" />
+                Default
+              </label>
+              <input id="backThemeFile" type="file" accept="image/*" />
+            </div>
+          </div>
+          <div class="control-box company-tools">
+            <div class="control-box-title">Company Name Control</div>
+            <label>Main Company Name<input id="companyMainName" placeholder="Enter main company name" /></label>
+            <label>Sub Company Name<input id="companySubName" placeholder="Enter sub company name" /></label>
+            <label>Company Display
+              <select id="companyTextMode">
+                <option value="text">Text</option>
+                <option value="image">Name Image</option>
+              </select>
+            </label>
+            <label>Font Family
+              <select id="companyFontFamily">
+                <option value="Oswald">Oswald</option>
+                <option value="Roboto Condensed">Roboto Condensed</option>
+                <option value="Arial">Arial</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Georgia">Georgia</option>
+              </select>
+            </label>
+            <label>Main Color <input id="companyMainColor" type="color" value="#ffffff" /></label>
+            <label>Sub Color <input id="companySubColor" type="color" value="#f3c84d" /></label>
+            <div id="companyNameImageRow" class="photo-upload" hidden>
+              <label for="companyNameImageFile" class="upload-btn">Choose Company Name Image</label>
+              <input id="companyNameImageFile" type="file" accept="image/*" />
+            </div>
+            <button id="companyAdjustToggle" type="button" class="company-adjust-toggle">Adjust</button>
+            <div id="companyAdjustPanel" class="company-adjust-grid" hidden>
+              <label>Main X <input id="companyX" type="range" min="-120" max="120" value="0" /></label>
+              <label>Main Y <input id="companyY" type="range" min="-60" max="60" value="0" /></label>
+              <label>Sub X <input id="companySubX" type="range" min="-120" max="120" value="0" /></label>
+              <label>Sub Y <input id="companySubY" type="range" min="-60" max="60" value="0" /></label>
+              <label>Main Font <input id="companyMainFont" type="range" min="24" max="56" value="38" /></label>
+              <label>Sub Font <input id="companySubFont" type="range" min="14" max="36" value="24" /></label>
+            </div>
+          </div>
+          <div class="control-box profile-tools">
+            <div class="control-box-title">Profile Frame Control</div>
+            <label>Profile Frame
+              <select id="profileFrameShape">
+                <option value="circle">Circle</option>
+                <option value="square">Square</option>
+              </select>
+            </label>
+            <button id="profileFrameAdjustToggle" type="button" class="profile-adjust-toggle">Adjust</button>
+            <div id="profileFrameAdjustPanel" class="profile-adjust-grid" hidden>
+              <label>Frame X <input id="profileFrameX" type="range" min="-80" max="80" value="0" /></label>
+              <label>Frame Y <input id="profileFrameY" type="range" min="-80" max="80" value="0" /></label>
+              <label>Frame <input id="profileFrameSize" type="range" min="120" max="220" value="178" /></label>
+            </div>
+          </div>
+          <div class="control-box signature-tools auth-signature-tools">
+            <div class="control-box-title">ID Information Control</div>
+            <label>Employee Signature Color
+              <input id="signatureColor" type="color" value="#111111" />
+            </label>
+            <label>Authorized Signature Input
+              <select id="authSignatureMode">
+                <option value="upload">Upload Photo</option>
+                <option value="draw">Electronic Pad</option>
+              </select>
+            </label>
+            <label>Signature Color
+              <input id="authSignatureColor" type="color" value="#111111" />
+            </label>
+            <div id="authSignatureUploadRow" class="photo-upload">
+              <label for="authSignatureFile" class="upload-btn">Choose Signature</label>
+              <label class="upload-default-toggle" for="authSignatureFileDefault">
+                <input id="authSignatureFileDefault" type="checkbox" />
+                Default
+              </label>
+              <input id="authSignatureFile" type="file" accept="image/*" />
+            </div>
+            <button id="authSignatureAdjustToggle" type="button" class="signature-adjust-toggle">Adjust</button>
+            <div id="authSignatureAdjustPanel" class="signature-adjust-grid" hidden>
+              <label>X <input id="authSignatureX" type="range" min="-80" max="80" value="0" /></label>
+              <label>Y <input id="authSignatureY" type="range" min="-40" max="40" value="0" /></label>
+              <label>Scale <input id="authSignatureScale" type="range" min="65" max="180" value="100" /></label>
+              <label>Rotate <input id="authSignatureRotate" type="range" min="-45" max="45" value="0" /></label>
+            </div>
+            <div id="authSignaturePadWrap" class="signature-pad-wrap" hidden>
+              <canvas id="authSignaturePad" class="signature-pad-canvas" width="520" height="180" aria-label="Authorized signature drawing pad"></canvas>
+              <div class="signature-pad-actions">
+                <button id="clearAuthSignaturePad" type="button">Clear Pad</button>
+                <button id="useAuthPadSignature" type="button">Use Drawn Signature</button>
+              </div>
+            </div>
+            <label>Authorized Signatory<input id="signatory" placeholder="Enter signatory name" /></label>
+            <label>Signatory Title<input id="signatoryTitle" placeholder="Enter signatory title" /></label>
+            <label>Address<input id="address" placeholder="Enter office address" /></label>
+            <label>Telephone<input id="telephone" placeholder="Enter office telephone" /></label>
+            <label>Card Notice
+              <textarea id="noticeText" rows="4">This card is non-transferable Always carry
+you card during office hours.
+in case of loss, inform issuing authority.
+If found, please call our main office</textarea>
+            </label>
+          </div>
+          <div class="control-box">
+            <div class="control-box-title">Watermark Control</div>
+            <button id="watermarkAdjustToggle" type="button" class="company-adjust-toggle">Adjust Watermark</button>
+            <div id="watermarkAdjustPanel" class="watermark-tools" hidden>
+              <label class="watermark-toggle">
+                <input id="showWatermark" type="checkbox" />
+                Show Watermark
+              </label>
+              <label>Watermark Text<input id="watermarkText" placeholder="Enter watermark text" /></label>
+              <label>Layer
+                <select id="watermarkLayer">
+                  <option value="over">Over Content</option>
+                  <option value="under">Under Content</option>
+                </select>
+              </label>
+              <label>Rows <input id="watermarkRows" type="range" min="1" max="8" value="4" /></label>
+              <label>Columns <input id="watermarkCols" type="range" min="1" max="6" value="3" /></label>
+              <label>Opacity <input id="watermarkOpacity" type="range" min="6" max="45" value="18" /></label>
+              <label>Color <input id="watermarkColor" type="color" value="#ffffff" /></label>
+              <label>Size <input id="watermarkSize" type="range" min="14" max="56" value="28" /></label>
+              <label>Rotation <input id="watermarkRotate" type="range" min="-60" max="60" value="-27" /></label>
+            </div>
+          </div>
+          <div class="control-box">
+            <div class="control-box-title">ID QR Code Control</div>
+            <label class="watermark-toggle">
+              <input id="showQrCode" type="checkbox" checked />
+              Show QR Code
+            </label>
+            <button id="qrAdjustToggle" type="button" class="company-adjust-toggle">Adjust QR</button>
+            <div id="qrAdjustPanel" class="company-adjust-grid" hidden>
+              <label>QR X <input id="qrX" type="range" min="-120" max="120" value="0" /></label>
+              <label>QR Y <input id="qrY" type="range" min="-120" max="120" value="0" /></label>
+            </div>
+          </div>
+          <div class="control-box">
+            <div class="control-box-title">ID Preview Control</div>
+            <label class="watermark-toggle">
+              <input id="previewAccessToggle" type="checkbox" checked />
+              Enable ID Preview
+            </label>
+            <label class="watermark-toggle">
+              <input id="previewInfoToggle" type="checkbox" checked />
+              Show Preview Information
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <div id="userSettingsPanel" class="form-grid user-form-grid">
+        <div class="control-box profile-tools">
+          <div class="control-box-title">Profile Photo Control</div>
+          <div class="photo-upload">
+            <label for="photoFile" class="upload-btn">Choose Profile Photo</label>
+            <input id="photoFile" type="file" accept="image/*" capture="user" />
+            <button id="openCameraBtn" type="button" class="upload-btn camera-btn">Use Camera</button>
+          </div>
+          <label class="watermark-toggle">
+            <input id="profileAiToggle" type="checkbox" checked />
+            Auto remove background
+          </label>
+          <p id="cameraHint" class="auth-error" hidden>Camera works only on https:// or http://localhost.</p>
+          <button id="profileAdjustToggle" type="button" class="profile-adjust-toggle">Adjust</button>
+          <div id="profileAdjustPanel" class="profile-adjust-grid" hidden>
+            <label>X <input id="profileX" type="range" min="-120" max="120" value="0" /></label>
+            <label>Y <input id="profileY" type="range" min="-120" max="120" value="0" /></label>
+            <label>Scale <input id="profileScale" type="range" min="45" max="190" value="100" /></label>
+            <label>Rotate <input id="profileRotate" type="range" min="-45" max="45" value="0" /></label>
+          </div>
+        </div>
+        <div class="control-box signature-tools">
+          <div class="control-box-title">Signature Control</div>
+          <label>Signature Input
+            <select id="signatureMode">
+              <option value="upload">Upload Photo</option>
+              <option value="draw">Electronic Pad</option>
+            </select>
+          </label>
+          <label id="signaturePadSourceRow">Pad Source
+            <select id="signaturePadSource">
+              <option value="desktop">Desktop Pad</option>
+              <option value="phone">Phone Pad</option>
+            </select>
+          </label>
+          <div id="signatureUploadRow" class="photo-upload">
+            <label for="signatureFile" class="upload-btn">Choose Signature</label>
+            <input id="signatureFile" type="file" accept="image/*" />
+          </div>
+          <button id="signatureAdjustToggle" type="button" class="signature-adjust-toggle">Adjust</button>
+          <div id="signatureAdjustPanel" class="signature-adjust-grid" hidden>
+            <label>X <input id="signatureX" type="range" min="-80" max="80" value="0" /></label>
+            <label>Y <input id="signatureY" type="range" min="-40" max="40" value="0" /></label>
+            <label>Scale <input id="signatureScale" type="range" min="65" max="160" value="100" /></label>
+            <label>Rotate <input id="signatureRotate" type="range" min="-45" max="45" value="0" /></label>
+          </div>
+          <div id="signaturePadWrap" class="signature-pad-wrap" hidden>
+            <canvas id="signaturePad" class="signature-pad-canvas" width="520" height="180" aria-label="Signature drawing pad"></canvas>
+            <div class="signature-pad-actions">
+              <button id="clearSignaturePad" type="button">Clear Pad</button>
+              <button id="usePadSignature" type="button">Use Drawn Signature</button>
+            </div>
+          </div>
+          <div id="signaturePhonePanel" class="signature-phone-panel" hidden>
+            <div class="signature-phone-head">Scan to Sign</div>
+            <canvas id="signaturePhoneQr" width="160" height="160" aria-label="Signature QR code"></canvas>
+            <div class="signature-phone-link">
+              <span>Link</span>
+              <a id="signaturePhoneLink" href="#" target="_blank" rel="noopener noreferrer"></a>
+            </div>
+            <p id="signaturePhoneStatus" class="signature-phone-status">Waiting for signature...</p>
+            <div class="signature-phone-actions">
+              <button id="signaturePhoneCopy" type="button">Copy Link</button>
+              <button id="signaturePhoneCancel" type="button" class="secondary">Cancel</button>
+            </div>
+          </div>
+        </div>
+        <div class="control-box">
+          <div class="control-box-title">Employee Information</div>
+          <label>Employee Name<input id="employeeName" placeholder="Enter employee name" /></label>
+          <label>Position<input id="position" placeholder="Enter position" /></label>
+          <label>Employee No<input id="employeeNo" placeholder="Enter employee number" /></label>
+          <label>Date Hired<input id="dateHired" placeholder="MM/DD/YYYY" /></label>
+          <label>Valid Until<input id="validUntil" placeholder="MM/DD/YYYY or N/A" /></label>
+          <label>Phone No<input id="phoneNo" placeholder="Enter phone number" /></label>
+          <label>Barcode Value<input id="barcodeValue" placeholder="Custom barcode text (optional)" /></label>
+          <label>Home Address<input id="homeAddress" placeholder="Enter home address" /></label>
+          <label>Emergency Contact Person<input id="emergencyPerson" placeholder="Enter emergency contact person" /></label>
+          <label>Emergency Contact No<input id="emergencyNo" placeholder="Enter emergency contact number" /></label>
+          <label>Return Contact<input id="returnContact" placeholder="Enter return contact" /></label>
+          <label>Return Contact No<input id="returnContactNo" placeholder="Enter return contact number" /></label>
+        </div>
+      </div>
+    </section>
+
+    <section class="preview-wrap">
+      <article class="id-card front theme-plain" id="frontCard">
+        <header class="front-header">
+          <img id="frontLogo" class="front-logo" alt="Company logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect width='100%25' height='100%25' fill='transparent'/%3E%3C/svg%3E" />
+          <img id="frontCompanyImage" class="front-company-image" alt="Company name image" hidden src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='120'%3E%3Crect width='100%25' height='100%25' fill='transparent'/%3E%3C/svg%3E" />
+          <div class="brand-lines">
+            <div class="kaking" id="frontKaking">&nbsp;</div>
+            <h2 id="frontCompany">&nbsp;</h2>
+          </div>
+        </header>
+
+        <div class="top-swoosh" aria-hidden="true"></div>
+
+        <div class="photo-ring" id="photoRing">
+          <div class="profile-mask" id="profileMask">
+            <img id="profilePhoto" alt="Employee" draggable="false" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='340' height='340'%3E%3Crect width='100%25' height='100%25' fill='%23d7d7d7'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23666' font-size='28' font-family='Arial'%3EPHOTO%3C/text%3E%3C/svg%3E" />
+          </div>
+        </div>
+
+        <h3 id="frontName">&nbsp;</h3>
+        <p class="role" id="frontPosition">&nbsp;</p>
+
+        <div class="signature-line">
+          <img id="employeeSignature" alt="Employee signature" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='120'%3E%3Crect width='100%25' height='100%25' fill='transparent'/%3E%3C/svg%3E" />
+          <span>Employee's Signature</span>
+        </div>
+
+        <dl class="meta">
+          <div><dt>Employee No:</dt><dd id="frontEmployeeNo">&nbsp;</dd></div>
+          <div><dt>Date Hired:</dt><dd id="frontDateHired">&nbsp;</dd></div>
+          <div><dt>Valid Until:</dt><dd id="frontValidUntil">&nbsp;</dd></div>
+          <div><dt>Phone No:</dt><dd id="frontPhoneNo">&nbsp;</dd></div>
+        </dl>
+
+        <div class="barcode-wrap">
+          <svg id="barcodeSvg" class="barcode" viewBox="0 0 300 78" preserveAspectRatio="none" aria-hidden="true"></svg>
+        </div>
+        <div class="card-watermark" id="frontWatermark" hidden>&nbsp;</div>
+      </article>
+
+      <article class="id-card back theme-plain" id="backCard">
+        <section class="back-content">
+          <p class="home-address-line"><strong>Home Address</strong><br><span id="backHomeAddress">&nbsp;</span></p>
+          <p class="emergency-contact-line"><strong>In Case of Emergency Contact</strong><br><span id="backEmergencyPerson">&nbsp;</span><br><span id="backEmergencyNo">&nbsp;</span></p>
+          <p class="return-contact-line"><strong>If found please return or call</strong><br><span id="backReturn">&nbsp;</span><br><span id="backReturnNo">&nbsp;</span></p>
+
+          <div class="auth-line">
+            <img id="authorizedSignature" alt="Authorized signature" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='120'%3E%3Crect width='100%25' height='100%25' fill='transparent'/%3E%3C/svg%3E" />
+            <strong id="backSignatory">&nbsp;</strong>
+            <span id="backSignatoryTitle">&nbsp;</span>
+          </div>
+
+          <p class="notice" id="backNotice">&nbsp;</p>
+          <div id="backQrWrap" class="back-qr-wrap">
+            <canvas id="backQrCanvas" width="96" height="96" aria-label="Back QR code"></canvas>
+          </div>
+        </section>
+
+        <footer>
+          <p id="backAddress">&nbsp;</p>
+          <p>Telephone No. <span id="backTelephone">&nbsp;</span></p>
+        </footer>
+        <div class="card-watermark" id="backWatermark" hidden>&nbsp;</div>
+      </article>
+      <div class="action-row">
+        <div class="action-group download-group">
+          <button id="downloadFront" class="preview-action primary" type="button">Download Front</button>
+          <button id="downloadBack" class="preview-action primary" type="button">Download Back</button>
+          <button id="printBoth" class="preview-action primary" type="button">Print Both</button>
+        </div>
+        <div class="action-group approve-group">
+          <button id="approveId" class="preview-action secondary" type="button">Approve</button>
+          <button id="openApprovedIds" class="preview-action secondary" type="button">Approved IDs</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="cardZoomModal" class="card-zoom-modal" hidden>
+    <div class="card-zoom-head">
+      <p id="cardZoomTitle" class="card-zoom-title">ID Preview</p>
+      <button id="cardZoomClose" type="button" class="card-zoom-close">Close</button>
+    </div>
+    <img id="cardZoomImage" class="card-zoom-image" alt="Zoomed ID preview" />
+  </div>
+
+  <section class="credits-box app-credit" aria-label="Footer Credit" style="visibility: hidden;">
+    <img
+      id="creatorCreditPhoto"
+      class="creator-credit-photo"
+      alt="Creator photo"
+      src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23cfd7ea'/%3E%3Ccircle cx='80' cy='63' r='28' fill='%23889abf'/%3E%3Cpath d='M30 140c9-25 29-39 50-39s41 14 50 39' fill='%23889abf'/%3E%3C/svg%3E"
+    />
+    <p id="creatorCreditText" class="footer-credit-text">Powered by Rafael Betinol — Professional &amp; Secure ID Creation</p>
+    <button id="creatorTrademarkBtn" type="button" class="credit-photo-set" aria-label="Edit trademark settings" hidden>TM</button>
+  </section>
+  <div id="cameraModal" class="confirm-modal" hidden>
+    <div class="confirm-card camera-card" role="dialog" aria-modal="true" aria-labelledby="cameraTitle">
+      <h2 id="cameraTitle" class="confirm-title">Capture Profile Photo</h2>
+      <p class="confirm-text">Allow camera access, then capture a photo for the profile.</p>
+      <label class="camera-device">
+        Camera
+        <select id="cameraDeviceSelect">
+          <option value="">Default camera</option>
+        </select>
+      </label>
+      <div class="camera-preview">
+        <video id="cameraVideo" class="camera-video" autoplay playsinline></video>
+        <canvas id="cameraCanvas" class="camera-canvas" hidden></canvas>
+      </div>
+      <p id="cameraError" class="auth-error" hidden>Unable to access camera.</p>
+      <div class="confirm-actions">
+        <button id="cameraCancel" class="btn" type="button">Cancel</button>
+        <button id="cameraCapture" class="btn" type="button">Capture</button>
+        <button id="cameraUse" class="btn" type="button" hidden>Use Photo</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const photoEl = document.getElementById("creatorCreditPhoto");
+      const textEl = document.getElementById("creatorCreditText");
+      let revealed = false;
+      const applyFromStorage = () => {
+        try {
+          const cloudStore = window.idCardCloudStore;
+          const cloudPhoto = cloudStore ? cloudStore.getItem("idCardCreatorCreatorCreditPhotoV1") : null;
+          const cloudText = cloudStore ? cloudStore.getItem("idCardCreatorCreatorCreditTextV1") : null;
+          const localPhoto = window.localStorage.getItem("idCardCreatorCreatorCreditPhotoV1");
+          const localText = window.localStorage.getItem("idCardCreatorCreatorCreditTextV1");
+          const photo = cloudPhoto || localPhoto;
+          const text = cloudText || localText;
+          if (photoEl) {
+            photoEl.style.visibility = "hidden";
+          }
+          if (photo && photoEl) {
+            photoEl.onload = () => {
+              if (photoEl) photoEl.style.visibility = "visible";
+              reveal();
+            };
+            photoEl.onerror = () => {
+              if (photoEl) photoEl.style.visibility = "visible";
+              reveal();
+            };
+            photoEl.src = "";
+            photoEl.src = photo;
+          }
+          if (text && text.trim() && textEl) textEl.textContent = text;
+          if (cloudPhoto) window.localStorage.setItem("idCardCreatorCreatorCreditPhotoV1", String(cloudPhoto));
+          if (cloudText !== null && cloudText !== undefined) {
+            window.localStorage.setItem("idCardCreatorCreatorCreditTextV1", String(cloudText));
+          }
+        } catch {
+          // ignore storage errors
+        }
+      };
+      const reveal = () => {
+        if (revealed) return;
+        revealed = true;
+        document.documentElement.classList.add("credit-ready");
+        document.documentElement.classList.remove("credit-has-local");
+        document.documentElement.classList.remove("credit-loading");
+        const credit = document.querySelector(".app-credit");
+        if (credit) credit.style.visibility = "visible";
+        if (photoEl) photoEl.style.visibility = "visible";
+      };
+      const ready = window.__idCardCloudReady || Promise.resolve();
+      ready.then(() => {
+        applyFromStorage();
+        reveal();
+      });
+      window.addEventListener("id-card-store", (evt) => {
+        const key = evt && evt.detail ? evt.detail.key : "";
+        if (key === "idCardCreatorCreatorCreditPhotoV1" || key === "idCardCreatorCreatorCreditTextV1") {
+          applyFromStorage();
+          reveal();
+        }
+      });
+    })();
+  </script>
+
+  <div id="entryLoginModal" class="admin-login-modal" hidden>
+    <div class="admin-login-card" role="dialog" aria-modal="true" aria-labelledby="entryLoginTitle">
+      <img
+        id="entryLoginLogo"
+        class="entry-login-logo"
+        alt="Company logo"
+        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect width='100%25' height='100%25' fill='transparent'/%3E%3C/svg%3E"
+      />
+      <h2 id="entryLoginTitle">Sign In</h2>
+      <p>Login first to open the ID Card Creator.</p>
+      <label>Email
+        <input id="entryLoginUsername" type="email" placeholder="Enter email" autocomplete="email" />
+      </label>
+      <label>Password
+        <input id="entryLoginPassword" type="password" placeholder="Enter password" autocomplete="current-password" />
+      </label>
+      <div class="admin-login-actions">
+        <button id="entryLoginSubmit" type="button">Login</button>
+      </div>
+      <p id="entryLoginError" class="admin-login-error" hidden>Invalid credentials.</p>
+    </div>
+  </div>
+
+  <div id="adminLoginModal" class="admin-login-modal" hidden>
+    <div class="admin-login-card" role="dialog" aria-modal="true" aria-labelledby="adminLoginTitle">
+      <h2 id="adminLoginTitle">Super Admin Login</h2>
+      <p>Enter admin email and password to unlock settings.</p>
+      <label>Email
+        <input id="adminUsername" type="email" placeholder="Enter email" autocomplete="email" />
+      </label>
+      <label>Password
+        <input id="adminPassword" type="password" placeholder="Enter password" autocomplete="current-password" />
+      </label>
+      <div class="admin-login-actions">
+        <button id="adminLoginSubmit" type="button">Login</button>
+        <button id="adminLoginCancel" type="button">Cancel</button>
+      </div>
+      <p id="adminLoginError" class="admin-login-error" hidden>Invalid username or password.</p>
+    </div>
+  </div>
+
+  <div id="creatorTrademarkModal" class="admin-login-modal" hidden>
+    <div class="admin-login-card" role="dialog" aria-modal="true" aria-labelledby="creatorTrademarkTitle">
+      <h2 id="creatorTrademarkTitle">TM Editor</h2>
+      <p>Only available to authenticated super admins.</p>
+      <label>Footer Description
+        <input id="creatorCreditTextInput" type="text" placeholder="Enter footer credit text" />
+      </label>
+      <div class="photo-upload">
+        <label for="creatorCreditPhotoFile" class="upload-btn">Choose Creator Photo</label>
+        <input id="creatorCreditPhotoFile" type="file" accept="image/*" />
+      </div>
+      <div class="admin-login-actions">
+        <button id="creatorTrademarkSave" type="button">Save</button>
+        <button id="creatorTrademarkCancel" type="button">Cancel</button>
+      </div>
+      <p id="creatorTrademarkError" class="admin-login-error" hidden>Super admin access required.</p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="cloud-sync.js"></script>
+  <script>
+    const cameraBtnFallback = document.getElementById("openCameraBtn");
+    const cameraHintFallback = document.getElementById("cameraHint");
+    if (cameraBtnFallback) {
+      cameraBtnFallback.addEventListener("click", () => {
+        if (typeof window.openCameraModal === "function") {
+          window.openCameraModal();
+          return;
+        }
+        if (cameraHintFallback) {
+          cameraHintFallback.textContent = "Camera module not loaded. Hard refresh (Ctrl+F5).";
+          cameraHintFallback.hidden = false;
+        }
+      });
+    }
+    (window.__idCardCloudReady || Promise.resolve()).finally(() => {
+      const appScript = document.createElement("script");
+      appScript.src = `script.js?v=${Date.now()}`;
+      appScript.onerror = () => {
+        if (cameraHintFallback) {
+          cameraHintFallback.textContent = "Failed to load app script. Check server and hard refresh.";
+          cameraHintFallback.hidden = false;
+        }
+      };
+      document.body.appendChild(appScript);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ID Preview</title>
+  <script>
+    (function () {
+      try {
+        const saved = window.localStorage.getItem("idCardCreatorInterfaceThemeV1");
+        if (saved === "dark") {
+          document.documentElement.classList.add("theme-dark");
+        } else {
+          document.documentElement.classList.remove("theme-dark");
+        }
+      } catch {
+        // ignore storage errors
+      }
+    })();
+  </script>
+  <script>
+    (function () {
+      document.documentElement.classList.add("credit-loading");
+      try {
+        const hasPhoto = !!window.localStorage.getItem("idCardCreatorCreatorCreditPhotoV1");
+        const hasText = !!window.localStorage.getItem("idCardCreatorCreatorCreditTextV1");
+        if (hasPhoto || hasText) document.documentElement.classList.add("credit-has-local");
+      } catch {
+        // ignore storage errors
+      }
+    })();
+  </script>
+  <style>
+    :root {
+      --bg: #040404;
+      --bg2: #0f0f10;
+      --card: rgba(21, 21, 23, 0.88);
+      --line: rgba(204, 204, 214, 0.22);
+      --text: #ececef;
+      --muted: #a6a8ae;
+      --accent: #cdced4;
+      --accent-2: #f4f4f6;
+      --ok: #4ade80;
+      --expired: #f87171;
+      --shadow: 0 18px 36px rgba(0, 0, 0, 0.58);
+    }
+    body {
+      position: relative;
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Rajdhani", "Roboto Condensed", "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 14% 0%, rgba(255, 255, 255, 0.08), transparent 36%),
+        radial-gradient(circle at 85% 5%, rgba(160, 160, 170, 0.07), transparent 34%),
+        linear-gradient(180deg, var(--bg2), var(--bg));
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.18;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.014) 0,
+        rgba(255, 255, 255, 0.014) 1px,
+        transparent 1px,
+        transparent 4px
+      );
+    }
+    .page {
+      position: relative;
+      z-index: 1;
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 24px 16px 24px;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+      animation: pageFadeIn 420ms ease-out both;
+      flex: 1 0 auto;
+    }
+    .page::before {
+      content: "";
+      position: absolute;
+      inset: 8px 8px auto;
+      height: 120px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 16% 40%, rgba(255, 255, 255, 0.12), transparent 46%),
+        radial-gradient(circle at 84% 0%, rgba(120, 120, 130, 0.12), transparent 48%);
+      pointer-events: none;
+      z-index: -1;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+      animation: panelRise 520ms ease-out both;
+    }
+    .hero {
+      display: block;
+      border: 1px solid var(--line);
+      box-shadow: none;
+      background: linear-gradient(180deg, rgba(36, 36, 40, 0.95), rgba(18, 18, 20, 0.95));
+      animation: panelRise 520ms ease-out both;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #f5f5f5, #7f7f84 35%, #efefef 70%, #66666b);
+    }
+    .hero h1 {
+      margin: 0;
+      font: 700 1.35rem "Orbitron", "Oswald", "Roboto Condensed", sans-serif;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #f3f3f5;
+      text-shadow: none;
+    }
+    .hero p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      text-align: center;
+    }
+    .meta {
+      display: grid;
+      gap: 6px;
+      font-size: 1rem;
+      justify-items: center;
+      text-align: center;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      align-items: center;
+      padding: 4px 0;
+      border-bottom: none;
+      width: auto;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+    }
+    .meta-row strong {
+      font-weight: 700;
+      color: #e4e5e9;
+    }
+    .status-active {
+      color: var(--ok);
+      font-weight: 700;
+    }
+    .status-expired {
+      color: var(--expired);
+      font-weight: 700;
+    }
+    .status-no-expiry {
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(250px, 340px));
+      gap: 16px;
+      justify-content: center;
+    }
+    .panel.info-only .cards {
+      display: none;
+    }
+    .card-slot {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 330 / 535;
+      border: 1px solid rgba(202, 202, 210, 0.2);
+      border-radius: 14px;
+      background: #121214;
+      box-shadow: 0 16px 34px rgba(0, 0, 0, 0.56);
+      overflow: hidden;
+      animation: cardReveal 560ms ease-out both;
+      transition: box-shadow 180ms ease;
+    }
+    .card-slot:nth-child(2) {
+      animation-delay: 120ms;
+    }
+    .card-slot::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 11;
+      background:
+        linear-gradient(130deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 40%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.01), rgba(0, 0, 0, 0.14));
+      pointer-events: none;
+    }
+    .card-slot::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border: 1px solid rgba(225, 225, 231, 0.2);
+      border-radius: 12px;
+      pointer-events: none;
+      z-index: 12;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .card-slot:hover {
+        box-shadow: 0 18px 38px rgba(0, 0, 0, 0.62);
+      }
+    }
+    .cards img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 2;
+    }
+    .card-label {
+      position: absolute;
+      left: 8px;
+      top: 8px;
+      z-index: 15;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      background: linear-gradient(180deg, rgba(56, 56, 61, 0.95), rgba(31, 31, 34, 0.95));
+      border: 1px solid rgba(196, 196, 205, 0.24);
+      color: #ffffff;
+    }
+    .card-watermark {
+      position: absolute;
+      inset: -35%;
+      z-index: var(--wm-z, 10);
+      display: grid;
+      grid-template-rows: repeat(var(--wm-rows, 4), 1fr);
+      align-content: stretch;
+      justify-items: stretch;
+      gap: 0;
+      padding: 0;
+      text-align: center;
+      font-family: "Oswald", Impact, sans-serif;
+      font-size: var(--wm-size, 28px);
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: rgba(var(--wm-color-rgb, 255, 255, 255), var(--wm-opacity, 0.18));
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      transform: rotate(var(--wm-rotate, -27deg));
+      pointer-events: none;
+      user-select: none;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .card-watermark[hidden] {
+      display: none;
+    }
+    .card-watermark .wm-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      width: 100%;
+      min-height: 100%;
+      padding: 0 4px;
+    }
+    .card-watermark .wm-row:nth-child(2n) {
+      transform: translateX(10px);
+    }
+    .card-watermark .wm-row span {
+      display: inline-block;
+      opacity: 1;
+      font-size: inherit;
+      line-height: 1;
+      font-family: inherit;
+    }
+    .message {
+      text-align: center;
+      font-size: 1rem;
+      color: var(--muted);
+      padding: 26px 14px;
+    }
+    .credits-box {
+      padding: 8px 12px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      box-shadow: none;
+    }
+    .footer-credit-text {
+      margin: 0;
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--fb-text, #1c1e21);
+      text-align: center;
+      font-family: "Roboto Condensed", "Segoe UI", Arial, sans-serif;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 70vw;
+    }
+    .app-credit {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: static;
+      transform: none;
+      margin: 8px auto 16px;
+      z-index: 1;
+      max-width: calc(100vw - 24px);
+    }
+    .credit-loading .app-credit,
+    .credit-has-local .app-credit {
+      visibility: hidden;
+    }
+    .credit-ready .app-credit {
+      visibility: visible;
+    }
+    .app-credit img {
+      visibility: inherit;
+    }
+    .creator-credit-photo {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid rgba(24, 119, 242, 0.45);
+    }
+    body.theme-dark {
+      --bg: #020202;
+      --bg2: #0a0a0c;
+      --card: rgba(10, 10, 12, 0.93);
+      --line: rgba(209, 209, 216, 0.22);
+      --text: #f2f2f4;
+      --muted: #adafb5;
+      --ok: #4ade80;
+      --expired: #f87171;
+      --shadow: 0 18px 38px rgba(0, 0, 0, 0.65);
+    }
+    body.theme-dark .meta-row {
+      background: transparent;
+      border: 0;
+    }
+    body.theme-dark .meta-row strong {
+      color: #e4e4e8;
+    }
+    body.theme-dark .hero {
+      background: linear-gradient(180deg, rgba(29, 29, 33, 0.95), rgba(10, 10, 12, 0.95));
+    }
+    body.theme-dark .credits-box {
+      border-color: transparent;
+      background: transparent;
+      box-shadow: none;
+    }
+    body.theme-dark .footer-credit-text {
+      color: #dbe6ff;
+    }
+    @keyframes pageFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes panelRise {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes cardReveal {
+      from { opacity: 0; transform: translateY(8px) scale(0.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes footerFade {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 760px) {
+      .meta {
+        font-size: 0.95rem;
+      }
+      .meta-row {
+        justify-content: center;
+      }
+      .cards {
+        grid-template-columns: minmax(240px, 320px);
+      }
+      .app-credit-spacer {
+        height: 70px;
+      }
+    }
+  </style>
+</head>
+<body class="theme-dark">
+  <main class="page">
+    <section class="panel hero">
+      <div>
+        <h1>Verified ID Preview</h1>
+        <p id="previewLead">Secure card view for approved employee records.</p>
+      </div>
+    </section>
+    <section id="previewPanel" class="panel" hidden>
+      <div id="metaWrap" class="meta"></div>
+      <div class="cards" id="previewCards">
+        <div class="card-slot">
+          <span class="card-label">Front</span>
+          <div id="frontWatermark" class="card-watermark" hidden></div>
+          <img id="frontImage" alt="Front ID Preview" />
+        </div>
+        <div class="card-slot">
+          <span class="card-label">Back</span>
+          <div id="backWatermark" class="card-watermark" hidden></div>
+          <img id="backImage" alt="Back ID Preview" />
+        </div>
+      </div>
+    </section>
+    <section id="messagePanel" class="panel message">Loading ID preview...</section>
+  </main>
+
+  <section class="credits-box app-credit" aria-label="Footer Credit" style="visibility: hidden;">
+    <img
+      id="creatorCreditPhoto"
+      class="creator-credit-photo"
+      alt="Creator photo"
+      src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23cfd7ea'/%3E%3Ccircle cx='80' cy='63' r='28' fill='%23889abf'/%3E%3Cpath d='M30 140c9-25 29-39 50-39s41 14 50 39' fill='%23889abf'/%3E%3C/svg%3E"
+    />
+    <p id="creatorCreditText" class="footer-credit-text">Powered by Rafael Betinol — Professional &amp; Secure ID Creation</p>
+  </section>
+  <script>
+    (function () {
+      const photoEl = document.getElementById("creatorCreditPhoto");
+      const textEl = document.getElementById("creatorCreditText");
+      let revealed = false;
+      const applyFromStorage = () => {
+        try {
+          const cloudStore = window.idCardCloudStore;
+          const cloudPhoto = cloudStore ? cloudStore.getItem("idCardCreatorCreatorCreditPhotoV1") : null;
+          const cloudText = cloudStore ? cloudStore.getItem("idCardCreatorCreatorCreditTextV1") : null;
+          const localPhoto = window.localStorage.getItem("idCardCreatorCreatorCreditPhotoV1");
+          const localText = window.localStorage.getItem("idCardCreatorCreatorCreditTextV1");
+          const photo = cloudPhoto || localPhoto;
+          const text = cloudText || localText;
+          if (photoEl) {
+            photoEl.style.visibility = "hidden";
+          }
+          if (photo && photoEl) {
+            photoEl.onload = () => {
+              if (photoEl) photoEl.style.visibility = "visible";
+              reveal();
+            };
+            photoEl.onerror = () => {
+              if (photoEl) photoEl.style.visibility = "visible";
+              reveal();
+            };
+            photoEl.src = "";
+            photoEl.src = photo;
+          }
+          if (text && text.trim() && textEl) textEl.textContent = text;
+          if (cloudPhoto) window.localStorage.setItem("idCardCreatorCreatorCreditPhotoV1", String(cloudPhoto));
+          if (cloudText !== null && cloudText !== undefined) {
+            window.localStorage.setItem("idCardCreatorCreatorCreditTextV1", String(cloudText));
+          }
+        } catch {
+          // ignore storage errors
+        }
+      };
+      const reveal = () => {
+        if (revealed) return;
+        revealed = true;
+        document.documentElement.classList.add("credit-ready");
+        document.documentElement.classList.remove("credit-has-local");
+        document.documentElement.classList.remove("credit-loading");
+        const credit = document.querySelector(".app-credit");
+        if (credit) credit.style.visibility = "visible";
+        if (photoEl) photoEl.style.visibility = "visible";
+      };
+      const ready = window.__idCardCloudReady || Promise.resolve();
+      ready.then(() => {
+        applyFromStorage();
+        reveal();
+      });
+      window.addEventListener("id-card-store", (evt) => {
+        const key = evt && evt.detail ? evt.detail.key : "";
+        if (key === "idCardCreatorCreatorCreditPhotoV1" || key === "idCardCreatorCreatorCreditTextV1") {
+          applyFromStorage();
+          reveal();
+        }
+      });
+    })();
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="cloud-sync.js"></script>
+  <script>
+    const interfaceThemeStorageKey = "idCardCreatorInterfaceThemeV1";
+    const watermarkStorageKey = "idCardCreatorWatermarkSettingsV1";
+    const previewAccessStorageKey = "idCardCreatorPreviewEnabledV1";
+    const previewInfoStorageKey = "idCardCreatorPreviewInfoEnabledV1";
+    const creatorCreditPhotoStorageKey = "idCardCreatorCreatorCreditPhotoV1";
+    const creatorCreditTextStorageKey = "idCardCreatorCreatorCreditTextV1";
+    const supabaseProjectUrl = "https://pboqhiwhkqfitxvbzbxt.supabase.co";
+    const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib3FoaXdoa3FmaXR4dmJ6Ynh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMDI4MzgsImV4cCI6MjA4NzU3ODgzOH0.H9DjOQmSop9e6O_z0uZgBNT2-WtuE4DJc4o1gFMs1do";
+    const supabaseClient = window.__idCardSupabaseClient || null;
+    const cloudStore = window.idCardCloudStore;
+
+    function getStoreItem(key) {
+      return cloudStore ? cloudStore.getItem(key) : null;
+    }
+    const previewPanel = document.getElementById("previewPanel");
+    const messagePanel = document.getElementById("messagePanel");
+    const metaWrap = document.getElementById("metaWrap");
+    const previewCards = document.getElementById("previewCards");
+    const frontWatermark = document.getElementById("frontWatermark");
+    const backWatermark = document.getElementById("backWatermark");
+    const frontImage = document.getElementById("frontImage");
+    const backImage = document.getElementById("backImage");
+    const creatorCreditPhoto = document.getElementById("creatorCreditPhoto");
+    const creatorCreditText = document.getElementById("creatorCreditText");
+    function readCreatorCreditValue(key) {
+      const cloudValue = getStoreItem(key);
+      if (cloudValue !== null && cloudValue !== undefined && cloudValue !== "") {
+        try {
+          window.localStorage.setItem(key, String(cloudValue));
+        } catch {}
+        return cloudValue;
+      }
+      try {
+        const local = window.localStorage.getItem(key);
+        if (local !== null && local !== undefined && local !== "") return local;
+      } catch {}
+      return null;
+    }
+    const previewLead = document.getElementById("previewLead");
+    const defaultWatermarkSettings = {
+      show: false,
+      text: "CONFIDENTIAL",
+      layer: "over",
+      rows: 4,
+      cols: 3,
+      opacity: 18,
+      color: "#ffffff",
+      size: 28,
+      rotate: -27
+    };
+
+    function getQueryKeys() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        return {
+          token: (params.get("t") || "").trim(),
+          id: (params.get("i") || params.get("id") || "").trim()
+        };
+      } catch {
+        return { token: "", id: "" };
+      }
+    }
+
+    function mapCloudRowToApprovedRecord(row) {
+      if (!row || typeof row !== "object") return null;
+      return {
+        id: row.id || "",
+        approvedAt: row.approved_at || "",
+        employeeNo: row.employee_no || "",
+        employeeName: row.employee_name || "",
+        position: row.position || "",
+        validUntil: row.valid_until || "N/A",
+        qrToken: row.qr_token || "",
+        qrValue: row.qr_value || "",
+        previewUrl: row.preview_url || "",
+        frontImage: row.front_image || "",
+        backImage: row.back_image || ""
+      };
+    }
+
+    async function loadRecordFromCloud(query) {
+      if (!supabaseClient) return null;
+      if (!query || (!query.token && !query.id)) return null;
+      const { data, error } = await supabaseClient.rpc("get_public_id_preview", {
+        p_token: query.token || null,
+        p_id: query.id || null
+      });
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      return mapCloudRowToApprovedRecord(row);
+    }
+
+    function parseValidityDate(value) {
+      const raw = String(value || "").trim();
+      if (!raw) return null;
+      const normalized = raw.toUpperCase();
+      if (normalized === "N/A" || normalized === "NA" || normalized === "NONE") return null;
+      let match = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+      if (match) {
+        const dt = new Date(Number(match[3]), Number(match[1]) - 1, Number(match[2]));
+        if (!Number.isNaN(dt.getTime())) return dt;
+      }
+      match = raw.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+      if (match) {
+        const dt = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+        if (!Number.isNaN(dt.getTime())) return dt;
+      }
+      return null;
+    }
+
+    function getCardStatus(validityText) {
+      const validityDate = parseValidityDate(validityText);
+      if (!validityDate) return "Verified";
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      validityDate.setHours(0, 0, 0, 0);
+      return validityDate <= today ? "Expired" : "Verified";
+    }
+
+    function statusClass(status) {
+      if (status === "Verified") return "status-active";
+      if (status === "Expired") return "status-expired";
+      return "status-no-expiry";
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function clampNum(value, min, max) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return min;
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function parseStoredBool(raw, fallback = true) {
+      if (raw === null || raw === undefined) return fallback;
+      const normalized = String(raw).trim().toLowerCase();
+      if (["true", "1", "yes", "on"].includes(normalized)) return true;
+      if (["false", "0", "no", "off"].includes(normalized)) return false;
+      return fallback;
+    }
+
+    function readLocalPreviewAccess() {
+      try {
+        return window.localStorage.getItem(previewAccessStorageKey);
+      } catch {
+        return null;
+      }
+    }
+
+    function writeLocalPreviewAccess(value) {
+      try {
+        if (value === null || value === undefined) {
+          window.localStorage.removeItem(previewAccessStorageKey);
+          return;
+        }
+        window.localStorage.setItem(previewAccessStorageKey, String(value));
+      } catch {
+        // ignore local storage failures
+      }
+    }
+
+    function readLocalPreviewInfo() {
+      try {
+        return window.localStorage.getItem(previewInfoStorageKey);
+      } catch {
+        return null;
+      }
+    }
+
+    function writeLocalPreviewInfo(value) {
+      try {
+        if (value === null || value === undefined) {
+          window.localStorage.removeItem(previewInfoStorageKey);
+          return;
+        }
+        window.localStorage.setItem(previewInfoStorageKey, String(value));
+      } catch {
+        // ignore local storage failures
+      }
+    }
+
+    function normalizeHexColor(value, fallback = "#ffffff") {
+      const raw = String(value || "").trim();
+      if (/^#[0-9a-f]{6}$/i.test(raw)) return raw.toLowerCase();
+      if (/^#[0-9a-f]{3}$/i.test(raw)) {
+        const r = raw[1];
+        const g = raw[2];
+        const b = raw[3];
+        return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
+      }
+      return fallback;
+    }
+
+    function hexToRgbCss(value) {
+      const hex = normalizeHexColor(value);
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `${r}, ${g}, ${b}`;
+    }
+
+    function readWatermarkSettings() {
+      try {
+        const raw = getStoreItem(watermarkStorageKey);
+        if (!raw) return { ...defaultWatermarkSettings };
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") return { ...defaultWatermarkSettings };
+        return {
+          ...defaultWatermarkSettings,
+          ...parsed,
+          show: !!parsed.show,
+          text: typeof parsed.text === "string" && parsed.text.trim() ? parsed.text.trim() : defaultWatermarkSettings.text,
+          layer: parsed.layer === "under" ? "under" : "over",
+          rows: clampNum(parsed.rows || defaultWatermarkSettings.rows, 1, 8),
+          cols: clampNum(parsed.cols || defaultWatermarkSettings.cols, 1, 6),
+          opacity: clampNum(parsed.opacity || defaultWatermarkSettings.opacity, 6, 45),
+          color: normalizeHexColor(parsed.color || defaultWatermarkSettings.color, defaultWatermarkSettings.color),
+          size: clampNum(parsed.size || defaultWatermarkSettings.size, 14, 56),
+          rotate: clampNum(parsed.rotate ?? defaultWatermarkSettings.rotate, -60, 60)
+        };
+      } catch {
+        return { ...defaultWatermarkSettings };
+      }
+    }
+
+    function buildWatermarkMarkup(text, rows, cols) {
+      const safeText = escapeHtml(text);
+      const lines = [];
+      for (let r = 0; r < rows; r += 1) {
+        const row = [];
+        for (let c = 0; c < cols; c += 1) {
+          row.push(`<span>${safeText}</span>`);
+        }
+        lines.push(`<div class="wm-row">${row.join("")}</div>`);
+      }
+      return lines.join("");
+    }
+
+    function applyWatermarkToElement(el, settings) {
+      if (!el) return;
+      el.hidden = !settings.show;
+      el.style.setProperty("--wm-opacity", `${settings.opacity / 100}`);
+      el.style.setProperty("--wm-size", `${settings.size}px`);
+      el.style.setProperty("--wm-rotate", `${settings.rotate}deg`);
+      el.style.setProperty("--wm-rows", `${settings.rows}`);
+      el.style.setProperty("--wm-cols", `${settings.cols}`);
+      el.style.setProperty("--wm-color-rgb", hexToRgbCss(settings.color));
+      el.style.setProperty("--wm-z", settings.layer === "under" ? "1" : "10");
+      el.innerHTML = settings.show ? buildWatermarkMarkup(settings.text, settings.rows, settings.cols) : "";
+    }
+
+    function renderWatermark() {
+      const settings = readWatermarkSettings();
+      applyWatermarkToElement(frontWatermark, settings);
+      applyWatermarkToElement(backWatermark, settings);
+    }
+
+    function applyTheme() {
+      let isDark = false;
+      try {
+        const saved = getStoreItem(interfaceThemeStorageKey);
+        if (saved === "dark" || saved === "light") {
+          isDark = saved === "dark";
+        } else {
+          isDark = true;
+        }
+      } catch {
+        isDark = false;
+      }
+      document.body.classList.toggle("theme-dark", isDark);
+    }
+
+    function loadFooterCredit() {
+      try {
+        const photo = readCreatorCreditValue(creatorCreditPhotoStorageKey);
+        if (photo && creatorCreditPhoto) creatorCreditPhoto.src = photo;
+      } catch {}
+      try {
+        const text = readCreatorCreditValue(creatorCreditTextStorageKey);
+        if (text && text.trim() && creatorCreditText) creatorCreditText.textContent = text;
+      } catch {}
+    }
+
+    function showMessage(message) {
+      if (previewPanel) previewPanel.hidden = true;
+      if (messagePanel) {
+        messagePanel.hidden = false;
+        messagePanel.textContent = message;
+      }
+    }
+
+    function isPreviewEnabled() {
+      const cloudValue = getStoreItem(previewAccessStorageKey);
+      if (cloudValue !== null && cloudValue !== undefined) {
+        writeLocalPreviewAccess(cloudValue);
+        return parseStoredBool(cloudValue, true);
+      }
+      const localValue = readLocalPreviewAccess();
+      return parseStoredBool(localValue, true);
+    }
+
+    function isPreviewInfoEnabled() {
+      const cloudValue = getStoreItem(previewInfoStorageKey);
+      if (cloudValue !== null && cloudValue !== undefined) {
+        writeLocalPreviewInfo(cloudValue);
+        return parseStoredBool(cloudValue, true);
+      }
+      const localValue = readLocalPreviewInfo();
+      return parseStoredBool(localValue, true);
+    }
+
+    function renderRecord(record) {
+      if (!record || !frontImage || !backImage || !metaWrap) {
+        showMessage("ID preview not found.");
+        return;
+      }
+      const allowPreview = isPreviewEnabled();
+      const allowInfo = isPreviewInfoEnabled();
+      if (!allowPreview && !allowInfo) {
+        showMessage("ID preview is disabled by the super admin.");
+        return;
+      }
+      const validUntil = (typeof record.validUntil === "string" && record.validUntil.trim()) ? record.validUntil.trim() : "N/A";
+      const status = getCardStatus(validUntil);
+      const approvedAt = record && record.approvedAt ? new Date(record.approvedAt) : null;
+      const approvedAtText = approvedAt && !Number.isNaN(approvedAt.getTime())
+        ? approvedAt.toLocaleString()
+        : "-";
+      if (allowInfo) {
+        metaWrap.hidden = false;
+        metaWrap.innerHTML = `
+          <div class="meta-row"><strong>Employee No:</strong><span>${escapeHtml(record.employeeNo || "-")}</span></div>
+          <div class="meta-row"><strong>Name:</strong><span>${escapeHtml(record.employeeName || "-")}</span></div>
+          <div class="meta-row"><strong>Position:</strong><span>${escapeHtml(record.position || "-")}</span></div>
+          <div class="meta-row"><strong>Card Validity:</strong><span>${escapeHtml(validUntil)}</span></div>
+          <div class="meta-row"><strong>Approved At:</strong><span>${escapeHtml(approvedAtText)}</span></div>
+          <div class="meta-row"><strong>Status:</strong><span class="${statusClass(status)}">${status}</span></div>
+        `;
+      } else {
+        metaWrap.hidden = true;
+        metaWrap.innerHTML = "";
+      }
+      if (previewPanel) previewPanel.classList.toggle("info-only", !allowPreview && allowInfo);
+      if (previewCards) previewCards.hidden = !allowPreview;
+      if (allowPreview) {
+        frontImage.src = record.frontImage || "";
+        backImage.src = record.backImage || "";
+      } else {
+        frontImage.src = "";
+        backImage.src = "";
+      }
+      if (previewLead) {
+        previewLead.textContent = `Employee ${record.employeeNo || "-"} • ${status} record`;
+      }
+      if (previewPanel) previewPanel.hidden = false;
+      if (messagePanel) messagePanel.hidden = true;
+      document.title = `ID Preview - ${record.employeeNo || "Employee"}`;
+    }
+
+    async function boot() {
+      applyTheme();
+      renderWatermark();
+      loadFooterCredit();
+      const query = getQueryKeys();
+      if (!query.token && !query.id) {
+        showMessage("Missing ID link. Please scan a valid QR code.");
+        return;
+      }
+      try {
+        const cloudRecord = await loadRecordFromCloud(query);
+        if (cloudRecord) {
+          renderRecord(cloudRecord);
+          return;
+        }
+      } catch {
+        // ignore cloud fetch errors and show fallback message
+      }
+
+      showMessage("This ID preview is unavailable on this device or has been removed.");
+    }
+
+    window.addEventListener("id-card-store", (evt) => {
+      const key = evt && evt.detail ? evt.detail.key : "";
+      if (key === interfaceThemeStorageKey) applyTheme();
+      if (key === watermarkStorageKey) renderWatermark();
+      if (key === previewAccessStorageKey) {
+        const enabled = isPreviewEnabled();
+        writeLocalPreviewAccess(enabled ? "true" : "false");
+        boot();
+      }
+      if (key === previewInfoStorageKey) {
+        const enabled = isPreviewInfoEnabled();
+        writeLocalPreviewInfo(enabled ? "true" : "false");
+        boot();
+      }
+      if (key === creatorCreditPhotoStorageKey || key === creatorCreditTextStorageKey) {
+        loadFooterCredit();
+      }
+    });
+
+    (window.__idCardCloudReady || Promise.resolve()).finally(() => {
+      boot();
+    });
+  </script>
+</body>
+</html>

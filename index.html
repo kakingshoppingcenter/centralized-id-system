@@ -1,0 +1,1140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In - ID Card Creator</title>
+  <script>
+    (function () {
+      try {
+        const saved = window.localStorage.getItem("idCardCreatorInterfaceThemeV1");
+        if (saved === "dark") {
+          document.documentElement.classList.add("theme-dark");
+        } else {
+          document.documentElement.classList.remove("theme-dark");
+        }
+      } catch {
+        // ignore storage errors
+      }
+    })();
+  </script>
+  <script>
+    (function () {
+      document.documentElement.classList.add("credit-loading");
+      try {
+        const hasPhoto = !!window.localStorage.getItem("idCardCreatorCreatorCreditPhotoV1");
+        const hasText = !!window.localStorage.getItem("idCardCreatorCreatorCreditTextV1");
+        if (hasPhoto || hasText) document.documentElement.classList.add("credit-has-local");
+      } catch {
+        // ignore storage errors
+      }
+    })();
+  </script>
+  <style>
+    :root {
+      --bg: #edf2fb;
+      --bg2: #f8fbff;
+      --card: #ffffff;
+      --line: #d0dbf0;
+      --ink: #1d2f54;
+      --muted: #5f7299;
+      --btn: #2c59d2;
+      --btn-hover: #224ab8;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Roboto Condensed", "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 8%, rgba(113, 150, 245, 0.28), transparent 42%),
+        radial-gradient(circle at 92% 88%, rgba(255, 211, 124, 0.2), transparent 44%),
+        linear-gradient(180deg, var(--bg2), var(--bg));
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      box-sizing: border-box;
+      opacity: 1;
+      transition: opacity 0.24s ease, transform 0.24s ease;
+      animation: signInPageIn 0.3s ease-out both;
+    }
+
+    body.page-leave {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    .card {
+      width: min(430px, 100%);
+      display: grid;
+      gap: 9px;
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      box-shadow: 0 22px 44px rgba(20, 36, 68, 0.2);
+      animation: signInCardIn 0.34s ease-out both;
+    }
+
+    .logo {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      justify-self: center;
+      filter: drop-shadow(0 6px 10px rgba(28, 73, 189, 0.2));
+    }
+
+    h1 {
+      margin: 0;
+      text-align: center;
+      font: 700 1.2rem "Oswald", "Roboto Condensed", sans-serif;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: #203a6c;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    label {
+      display: grid;
+      gap: 3px;
+      font-size: 0.78rem;
+      color: #2f4268;
+    }
+
+    input, select {
+      border: 1px solid #c0cfee;
+      border-radius: 8px;
+      padding: 9px 10px;
+      font: 600 0.83rem "Roboto Condensed", sans-serif;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #4d74de;
+      box-shadow: 0 0 0 3px rgba(77, 116, 222, 0.18);
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 3px;
+    }
+
+    .actions button {
+      border: 1px solid #2043a8;
+      border-radius: 8px;
+      padding: 9px 14px;
+      background: var(--btn);
+      color: #fff;
+      font: 700 0.77rem "Roboto Condensed", sans-serif;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+    }
+
+    .actions button:hover {
+      background: var(--btn-hover);
+    }
+
+    .error {
+      margin-top: 2px;
+      color: #b5122a;
+      font-size: 0.76rem;
+    }
+
+    .error[hidden] {
+      display: none;
+    }
+
+    .credits-box {
+      padding: 8px 12px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .footer-credit-text {
+      margin: 0;
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--fb-text, #1c1e21);
+      text-align: center;
+      font-family: "Roboto Condensed", "Segoe UI", Arial, sans-serif;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 70vw;
+    }
+
+    .app-credit {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: fixed;
+      left: 50%;
+      bottom: 10px;
+      transform: translateX(-50%);
+      z-index: 50;
+      max-width: calc(100vw - 24px);
+    }
+
+    .credit-loading .app-credit,
+    .credit-has-local .app-credit {
+      visibility: hidden;
+    }
+
+    .credit-ready .app-credit {
+      visibility: visible;
+    }
+
+    .app-credit img {
+      visibility: inherit;
+    }
+
+    .creator-credit-photo {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid rgba(24, 119, 242, 0.45);
+    }
+
+    .mini-preview-search {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 6px;
+      border: 1px solid rgba(99, 119, 164, 0.28);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.35);
+      opacity: 0.45;
+      transition: opacity 0.16s ease, background-color 0.16s ease;
+      backdrop-filter: blur(2px);
+    }
+
+    .mini-preview-search:hover,
+    .mini-preview-search:focus-within {
+      opacity: 0.82;
+      background: rgba(255, 255, 255, 0.62);
+    }
+
+    .mini-preview-search input {
+      width: 90px;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      font: 600 0.64rem "Roboto Condensed", sans-serif;
+      padding: 1px 2px;
+    }
+
+    .mini-preview-search input:focus {
+      outline: none;
+      box-shadow: none;
+    }
+
+    .mini-preview-search input::placeholder {
+      color: #5f7299;
+    }
+
+    .mini-preview-search button {
+      border: 0;
+      border-radius: 999px;
+      background: rgba(44, 89, 210, 0.84);
+      color: #fff;
+      padding: 4px 7px;
+      font: 700 0.6rem "Roboto Condensed", sans-serif;
+      cursor: pointer;
+    }
+
+    .mini-preview-result {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      padding: 14px;
+      display: grid;
+      place-items: center;
+      background: rgba(10, 15, 28, 0.78);
+      backdrop-filter: blur(5px);
+    }
+
+    .mini-preview-result[hidden] {
+      display: none;
+    }
+
+    .mini-preview-shell {
+      width: min(920px, 100%);
+      max-height: calc(100vh - 28px);
+      overflow: auto;
+      border: 1px solid rgba(122, 144, 195, 0.45);
+      border-radius: 12px;
+      background: linear-gradient(180deg, #2c3853, #27344d);
+      box-shadow: 0 24px 44px rgba(0, 0, 0, 0.46);
+      padding: 12px 10px 10px;
+      display: grid;
+      gap: 9px;
+      justify-items: center;
+    }
+
+    .mini-preview-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mini-preview-title {
+      margin: 0;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #dbe7ff;
+      letter-spacing: 0.02em;
+    }
+
+    .mini-preview-close {
+      border: 1px solid #6b83b8;
+      border-radius: 8px;
+      background: #314162;
+      color: #e6eeff;
+      padding: 6px 10px;
+      font: 700 0.68rem "Roboto Condensed", sans-serif;
+      cursor: pointer;
+    }
+
+    .mini-result-meta {
+      display: grid;
+      gap: 3px;
+      font-size: 0.98rem;
+      line-height: 1.25;
+      color: #f0f4ff;
+      word-break: break-word;
+      justify-self: start;
+      width: min(760px, 100%);
+      padding: 4px 6px 2px;
+    }
+
+    .mini-result-meta strong {
+      color: #cddcff;
+      font-weight: 700;
+      margin-right: 6px;
+    }
+
+    .mini-result-images {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .mini-result-images img {
+      width: min(100%, 260px);
+      aspect-ratio: 330 / 535;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 2px solid #93a9d8;
+      background: #e7edf9;
+      box-shadow: 0 10px 20px rgba(7, 13, 27, 0.35);
+    }
+
+    @media (max-width: 980px) {
+      .mini-preview-result {
+        padding: 10px;
+      }
+
+      .mini-preview-shell {
+        width: 100%;
+        max-height: calc(100vh - 20px);
+        padding: 10px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .mini-preview-head {
+        align-items: flex-start;
+        gap: 6px;
+      }
+
+      .mini-preview-title {
+        font-size: 0.82rem;
+        line-height: 1.2;
+      }
+
+      .mini-preview-close {
+        padding: 5px 9px;
+        font-size: 0.64rem;
+      }
+
+      .mini-result-meta {
+        font-size: 0.69rem;
+      }
+
+      .mini-result-images {
+        grid-template-columns: 1fr;
+        justify-items: center;
+      }
+
+      .mini-result-images img {
+        width: min(100%, 220px);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .mini-preview-search {
+        left: 8px;
+        right: 8px;
+        top: 8px;
+        width: auto;
+      }
+
+      .mini-preview-search input {
+        width: 100%;
+      }
+
+      .mini-preview-shell {
+        border-radius: 10px;
+        padding: 8px;
+      }
+    }
+
+    .mini-result-empty {
+      margin: 0;
+      font-size: 0.76rem;
+      color: #c4d2f0;
+    }
+
+    body.theme-dark {
+      --bg: #18191a;
+      --bg2: #111317;
+      --card: #242526;
+      --line: #3a3b3c;
+      --ink: #e4e6eb;
+      --muted: #b0b3b8;
+      --btn: #2374e1;
+      --btn-hover: #3a81e6;
+    }
+
+    body.theme-dark .card {
+      box-shadow: 0 18px 34px rgba(0, 0, 0, 0.42);
+    }
+
+    body.theme-dark h1 {
+      color: #e7ecff;
+    }
+
+    body.theme-dark label {
+      color: #d0d9ec;
+    }
+
+    body.theme-dark input,
+    body.theme-dark select {
+      background: #3a3b3c;
+      border-color: #4b4d50;
+      color: #e4e6eb;
+    }
+
+    body.theme-dark .credits-box {
+      border-color: transparent;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    body.theme-dark .footer-credit-text {
+      color: #dbe6ff;
+    }
+
+    body.theme-dark .mini-preview-search {
+      border-color: rgba(149, 167, 208, 0.32);
+      background: rgba(36, 45, 64, 0.34);
+    }
+
+    body.theme-dark .mini-preview-search:hover,
+    body.theme-dark .mini-preview-search:focus-within {
+      background: rgba(36, 45, 64, 0.58);
+    }
+
+    body.theme-dark .mini-preview-search input {
+      color: #d8e3ff;
+    }
+
+    body.theme-dark .mini-preview-search input::placeholder {
+      color: #a9b9df;
+    }
+
+    body.theme-dark .mini-preview-result {
+      background: rgba(7, 10, 18, 0.78);
+    }
+
+    body.theme-dark .mini-preview-shell {
+      border-color: rgba(120, 140, 184, 0.4);
+      background: linear-gradient(180deg, #27324a, #222c41);
+      box-shadow: 0 12px 22px rgba(0, 0, 0, 0.5);
+    }
+
+    body.theme-dark .mini-preview-title {
+      color: #d8e3ff;
+    }
+
+    body.theme-dark .mini-preview-close {
+      border-color: #536998;
+      background: #2b3854;
+      color: #d8e3ff;
+    }
+
+    body.theme-dark .mini-result-meta {
+      color: #d4deef;
+    }
+
+    body.theme-dark .mini-result-meta strong {
+      color: #e3ebff;
+    }
+
+    body.theme-dark .mini-result-images img {
+      border-color: #526184;
+      background: #212b3e;
+    }
+
+    body.theme-dark .mini-result-empty {
+      color: #b5c2df;
+    }
+
+    @keyframes signInPageIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes signInCardIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.99);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .app-loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(120, 150, 210, 0.16), transparent 40%),
+        radial-gradient(circle at 80% 10%, rgba(255, 220, 160, 0.12), transparent 38%),
+        rgba(8, 12, 20, 0.08);
+      backdrop-filter: blur(6px);
+      color: #1d2f54;
+      font: 700 0.92rem "Roboto Condensed", "Segoe UI", Arial, sans-serif;
+      letter-spacing: 0.03em;
+      animation: loadingFadeOut 0.4s ease forwards;
+      animation-delay: 1.4s;
+    }
+
+    body.theme-dark .app-loading-overlay {
+      color: #e6eefc;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(80, 110, 170, 0.2), transparent 40%),
+        radial-gradient(circle at 80% 10%, rgba(200, 170, 110, 0.14), transparent 38%),
+        rgba(6, 8, 12, 0.32);
+    }
+
+    .app-loading-card {
+      min-width: min(360px, 82vw);
+      padding: 14px 16px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(90, 116, 170, 0.22);
+      background: rgba(255, 255, 255, 0.78);
+      box-shadow: 0 18px 32px rgba(0, 0, 0, 0.18);
+      display: grid;
+      gap: 10px;
+      text-align: center;
+    }
+
+    .app-loading-ring {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 3px solid rgba(44, 89, 210, 0.2);
+      border-top-color: rgba(44, 89, 210, 0.9);
+      animation: winRingSpin 0.9s linear infinite;
+      margin: 0 auto;
+    }
+
+    body.theme-dark .app-loading-card {
+      background: rgba(18, 22, 30, 0.82);
+      border-color: rgba(120, 146, 198, 0.28);
+    }
+
+    body.theme-dark .app-loading-ring {
+      border-color: rgba(140, 170, 230, 0.25);
+      border-top-color: rgba(160, 196, 255, 0.95);
+    }
+
+    @keyframes loadingFadeOut {
+      0% {
+        opacity: 1;
+        visibility: visible;
+      }
+      100% {
+        opacity: 0;
+        visibility: hidden;
+      }
+    }
+
+    @keyframes winRingSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+</style>
+</head>
+<body class="theme-dark app-loading">
+  <div id="appLoadingOverlay" class="app-loading-overlay" aria-live="polite" aria-busy="true">
+    <div class="app-loading-card">
+      <div>Loading sign in…</div>
+      <div class="app-loading-ring" aria-hidden="true"></div>
+    </div>
+  </div>
+  <section id="miniPreviewResult" class="mini-preview-result" hidden aria-label="Quick ID preview result">
+    <div class="mini-preview-shell">
+      <div class="mini-preview-head">
+        <p id="miniPreviewTitle" class="mini-preview-title">ID Preview Result</p>
+        <button id="miniPreviewClose" class="mini-preview-close" type="button">Close</button>
+      </div>
+      <p id="miniPreviewEmpty" class="mini-result-empty">Type employee number or name.</p>
+      <div id="miniPreviewMeta" class="mini-result-meta" hidden></div>
+      <div id="miniPreviewImages" class="mini-result-images" hidden>
+        <img id="miniPreviewFront" alt="Front preview" />
+        <img id="miniPreviewBack" alt="Back preview" />
+      </div>
+    </div>
+  </section>
+
+  <main class="card">
+    <img
+      id="signInLogo"
+      class="logo"
+      alt="Company logo"
+      src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect width='100%25' height='100%25' fill='transparent'/%3E%3C/svg%3E"
+    />
+    <h1>Sign In</h1>
+    <p>Login first to open the ID Card Creator.</p>
+
+    <label>Email
+      <input id="signInUsername" type="email" placeholder="Enter email" autocomplete="email" />
+    </label>
+    <label>Password
+      <input id="signInPassword" type="password" placeholder="Enter password" autocomplete="current-password" />
+    </label>
+    <div class="actions">
+      <button id="signInSubmit" type="button">Login</button>
+    </div>
+    <p id="signInError" class="error" hidden>Invalid credentials.</p>
+  </main>
+
+  <section class="credits-box app-credit" aria-label="Footer Credit" style="visibility: hidden;">
+    <img
+      id="creatorCreditPhoto"
+      class="creator-credit-photo"
+      alt="Creator photo"
+      src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' rx='80' fill='%23cfd7ea'/%3E%3Ccircle cx='80' cy='63' r='28' fill='%23889abf'/%3E%3Cpath d='M30 140c9-25 29-39 50-39s41 14 50 39' fill='%23889abf'/%3E%3C/svg%3E"
+    />
+    <p id="creatorCreditText" class="footer-credit-text">Powered by Rafael Betinol — Professional &amp; Secure ID Creation</p>
+  </section>
+  <script>
+    (function () {
+      const photoEl = document.getElementById("creatorCreditPhoto");
+      const textEl = document.getElementById("creatorCreditText");
+      let revealed = false;
+      const applyFromStorage = () => {
+        try {
+          const cloudStore = window.idCardCloudStore;
+          const cloudPhoto = cloudStore ? cloudStore.getItem("idCardCreatorCreatorCreditPhotoV1") : null;
+          const cloudText = cloudStore ? cloudStore.getItem("idCardCreatorCreatorCreditTextV1") : null;
+          const localPhoto = window.localStorage.getItem("idCardCreatorCreatorCreditPhotoV1");
+          const localText = window.localStorage.getItem("idCardCreatorCreatorCreditTextV1");
+          const photo = cloudPhoto || localPhoto;
+          const text = cloudText || localText;
+          if (photoEl) {
+            photoEl.style.visibility = "hidden";
+          }
+          if (photo && photoEl) {
+            photoEl.onload = () => {
+              if (photoEl) photoEl.style.visibility = "visible";
+              reveal();
+            };
+            photoEl.onerror = () => {
+              if (photoEl) photoEl.style.visibility = "visible";
+              reveal();
+            };
+            photoEl.src = "";
+            photoEl.src = photo;
+          }
+          if (text && text.trim() && textEl) textEl.textContent = text;
+          if (cloudPhoto) window.localStorage.setItem("idCardCreatorCreatorCreditPhotoV1", String(cloudPhoto));
+          if (cloudText !== null && cloudText !== undefined) {
+            window.localStorage.setItem("idCardCreatorCreatorCreditTextV1", String(cloudText));
+          }
+        } catch {
+          // ignore storage errors
+        }
+      };
+      const reveal = () => {
+        if (revealed) return;
+        revealed = true;
+        document.documentElement.classList.add("credit-ready");
+        document.documentElement.classList.remove("credit-has-local");
+        document.documentElement.classList.remove("credit-loading");
+        const credit = document.querySelector(".app-credit");
+        if (credit) credit.style.visibility = "visible";
+        if (photoEl) photoEl.style.visibility = "visible";
+      };
+      const ready = window.__idCardCloudReady || Promise.resolve();
+      ready.then(() => {
+        applyFromStorage();
+        reveal();
+      });
+      window.addEventListener("id-card-store", (evt) => {
+        const key = evt && evt.detail ? evt.detail.key : "";
+        if (key === "idCardCreatorCreatorCreditPhotoV1" || key === "idCardCreatorCreatorCreditTextV1") {
+          applyFromStorage();
+          reveal();
+        }
+      });
+    })();
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="cloud-sync.js"></script>
+  <script>
+    const superAdminCredentialsStorageKey = "idCardCreatorSuperAdminCredentialsV1";
+    const adminCredentialsStorageKey = "idCardCreatorAdminCredentialsV1";
+    const interfaceThemeStorageKey = "idCardCreatorInterfaceThemeV1";
+    const entryLoginSessionStorageKey = "idCardCreatorEntryLoginSessionV1";
+    const logoutTsStorageKey = "idCardCreatorLogoutTsV1";
+    const creatorCreditPhotoStorageKey = "idCardCreatorCreatorCreditPhotoV1";
+    const creatorCreditTextStorageKey = "idCardCreatorCreatorCreditTextV1";
+    const defaultsStorageKey = "idCardCreatorSavedDefaultsV2";
+    const currentLogoStorageKey = "idCardCreatorCurrentLogoV1";
+
+    const signInUsername = document.getElementById("signInUsername");
+    const signInPassword = document.getElementById("signInPassword");
+    const signInSubmit = document.getElementById("signInSubmit");
+    const signInError = document.getElementById("signInError");
+    const signInLogo = document.getElementById("signInLogo");
+    const creatorCreditPhoto = document.getElementById("creatorCreditPhoto");
+    const creatorCreditText = document.getElementById("creatorCreditText");
+    function readCreatorCreditValue(key) {
+      const cloudValue = getStoreItem(key);
+      if (cloudValue !== null && cloudValue !== undefined && cloudValue !== "") {
+        try {
+          window.localStorage.setItem(key, String(cloudValue));
+        } catch {}
+        return cloudValue;
+      }
+      try {
+        const local = window.localStorage.getItem(key);
+        if (local !== null && local !== undefined && local !== "") return local;
+      } catch {}
+      return null;
+    }
+    const miniPreviewSearch = document.getElementById("miniPreviewSearch");
+    const miniPreviewQuery = document.getElementById("miniPreviewQuery");
+    const miniPreviewResult = document.getElementById("miniPreviewResult");
+    const miniPreviewEmpty = document.getElementById("miniPreviewEmpty");
+    const miniPreviewMeta = document.getElementById("miniPreviewMeta");
+    const miniPreviewImages = document.getElementById("miniPreviewImages");
+    const miniPreviewFront = document.getElementById("miniPreviewFront");
+    const miniPreviewBack = document.getElementById("miniPreviewBack");
+    const miniPreviewTitle = document.getElementById("miniPreviewTitle");
+    const miniPreviewClose = document.getElementById("miniPreviewClose");
+    const supabaseProjectUrl = "https://pboqhiwhkqfitxvbzbxt.supabase.co";
+    const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBib3FoaXdoa3FmaXR4dmJ6Ynh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwMDI4MzgsImV4cCI6MjA4NzU3ODgzOH0.H9DjOQmSop9e6O_z0uZgBNT2-WtuE4DJc4o1gFMs1do";
+    const supabaseClient = window.__idCardSupabaseClient || null;
+    const cloudStore = window.idCardCloudStore;
+    const authChannel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("idcard-auth") : null;
+
+    function getStoreItem(key) {
+      return cloudStore ? cloudStore.getItem(key) : null;
+    }
+
+    function setStoreItem(key, value) {
+      if (!cloudStore) return;
+      cloudStore.setItem(key, value);
+    }
+    function removeStoreItem(key) {
+      if (!cloudStore) return;
+      cloudStore.removeItem(key);
+    }
+    let navigationInProgress = false;
+
+    function navigateWithTransition(url, { replace = false, delay = 210 } = {}) {
+      if (!url || navigationInProgress) return;
+      navigationInProgress = true;
+      if (document.body) document.body.classList.add("page-leave");
+      setTimeout(() => {
+        if (replace) {
+          window.location.replace(url);
+          return;
+        }
+        window.location.href = url;
+      }, Math.max(0, delay));
+    }
+
+    function applyInterfaceTheme() {
+      try {
+        const saved = getStoreItem(interfaceThemeStorageKey);
+        if (saved === "dark" || saved === "light") {
+          document.body.classList.toggle("theme-dark", saved === "dark");
+        } else {
+          document.body.classList.add("theme-dark");
+        }
+      } catch {
+        document.body.classList.remove("theme-dark");
+      }
+    }
+
+    function readCreds(key, fallbackUsername, fallbackPassword) {
+      try {
+        const raw = getStoreItem(key);
+        if (!raw) return { username: fallbackUsername, password: fallbackPassword };
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") {
+          return { username: fallbackUsername, password: fallbackPassword };
+        }
+        return {
+          username: typeof parsed.username === "string" && parsed.username.trim() ? parsed.username.trim() : fallbackUsername,
+          password: typeof parsed.password === "string" && parsed.password ? parsed.password : fallbackPassword
+        };
+      } catch {
+        return { username: fallbackUsername, password: fallbackPassword };
+      }
+    }
+
+    function loadCredits() {
+      let hasCurrentLogo = false;
+      try {
+        const currentLogo = getStoreItem(currentLogoStorageKey);
+        if (currentLogo && signInLogo) {
+          signInLogo.src = currentLogo;
+          hasCurrentLogo = true;
+        }
+      } catch {}
+      try {
+        const savedPhoto = readCreatorCreditValue(creatorCreditPhotoStorageKey);
+        if (savedPhoto && creatorCreditPhoto) creatorCreditPhoto.src = savedPhoto;
+      } catch {}
+      try {
+        const savedText = readCreatorCreditValue(creatorCreditTextStorageKey);
+        if (savedText && savedText.trim() && creatorCreditText) creatorCreditText.textContent = savedText;
+      } catch {}
+      try {
+        if (hasCurrentLogo) return;
+        const raw = getStoreItem(defaultsStorageKey);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        const logo = parsed && parsed.values ? parsed.values.logoFile : "";
+        if (typeof logo === "string" && logo && signInLogo) signInLogo.src = logo;
+      } catch {}
+    }
+
+    async function alreadySignedIn() {
+      try {
+        if (!supabaseClient) return false;
+        const { data, error } = await supabaseClient.auth.getSession();
+        if (error) return false;
+        return !!(data && data.session);
+      } catch {
+        return false;
+      }
+    }
+
+    async function submitLogin() {
+      if (window.idCardCloudStore && typeof window.idCardCloudStore.pull === "function") {
+        try {
+          await window.idCardCloudStore.pull();
+        } catch {}
+      } else if (window.__idCardCloudReady) {
+        try {
+          await window.__idCardCloudReady;
+        } catch {}
+      }
+      const email = signInUsername ? (signInUsername.value || "").trim() : "";
+      const password = signInPassword ? (signInPassword.value || "") : "";
+      if (!email || !password || !supabaseClient) {
+        if (signInError) signInError.hidden = false;
+        return;
+      }
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error || !(data && data.session)) {
+          if (signInError) signInError.hidden = false;
+          return;
+        }
+        if (authChannel) authChannel.postMessage({ type: "auth", state: "signed_in", ts: Date.now() });
+      } catch {
+        if (signInError) signInError.hidden = false;
+        return;
+      }
+
+      try {
+        setStoreItem(
+          entryLoginSessionStorageKey,
+          JSON.stringify({ signedIn: true, role: "admin", source: "entry", unlocked: false })
+        );
+        removeStoreItem(logoutTsStorageKey);
+        if (window.idCardCloudStore && typeof window.idCardCloudStore.flush === "function") {
+          await window.idCardCloudStore.flush();
+        }
+      } catch {}
+      navigateWithTransition("dashboard.html");
+    }
+
+    function mapCloudRowToApprovedRecord(row) {
+      if (!row || typeof row !== "object") return null;
+      return {
+        id: row.id || "",
+        approvedAt: row.approved_at || "",
+        employeeNo: row.employee_no || "",
+        employeeName: row.employee_name || "",
+        position: row.position || "",
+        validUntil: row.valid_until || "N/A",
+        qrToken: row.qr_token || "",
+        qrValue: row.qr_value || "",
+        previewUrl: row.preview_url || "",
+        frontImage: row.front_image || "",
+        backImage: row.back_image || ""
+      };
+    }
+
+    function normalizeSearchValue(value) {
+      return String(value || "").trim().replace(/[%_,]/g, " ").replace(/\s+/g, " ").trim();
+    }
+
+    async function fetchApprovedRecordByQuery(query) {
+      if (!supabaseClient) return null;
+      const safeQuery = normalizeSearchValue(query);
+      if (!safeQuery) return null;
+      const { data, error } = await supabaseClient
+        .from("id_records")
+        .select("id, approved_at, employee_no, employee_name, position, valid_until, qr_token, qr_value, preview_url, front_image, back_image")
+        .or(`employee_no.ilike.%${safeQuery}%,employee_name.ilike.%${safeQuery}%`)
+        .limit(1);
+      if (error) throw error;
+      const row = Array.isArray(data) && data.length ? data[0] : null;
+      return mapCloudRowToApprovedRecord(row);
+    }
+
+    function parseValidityDate(value) {
+      const raw = String(value || "").trim();
+      if (!raw) return null;
+      const normalized = raw.toUpperCase();
+      if (normalized === "N/A" || normalized === "NA" || normalized === "NONE") return null;
+      let match = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+      if (match) {
+        const month = Number(match[1]);
+        const day = Number(match[2]);
+        const year = Number(match[3]);
+        const dt = new Date(year, month - 1, day);
+        if (dt.getFullYear() === year && dt.getMonth() === month - 1 && dt.getDate() === day) return dt;
+      }
+      match = raw.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+      if (match) {
+        const year = Number(match[1]);
+        const month = Number(match[2]);
+        const day = Number(match[3]);
+        const dt = new Date(year, month - 1, day);
+        if (dt.getFullYear() === year && dt.getMonth() === month - 1 && dt.getDate() === day) return dt;
+      }
+      return null;
+    }
+
+    function getValidityStatus(value) {
+      const dt = parseValidityDate(value);
+      if (!dt) return "No Expiry";
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      dt.setHours(0, 0, 0, 0);
+      return dt <= today ? "Expired" : "Active";
+    }
+
+    function renderMiniPreview(record, query) {
+      if (!miniPreviewResult || !miniPreviewEmpty || !miniPreviewMeta || !miniPreviewImages || !miniPreviewFront || !miniPreviewBack) return;
+      if (!query) {
+        miniPreviewResult.hidden = true;
+        miniPreviewMeta.hidden = true;
+        miniPreviewImages.hidden = true;
+        miniPreviewEmpty.hidden = true;
+        miniPreviewFront.removeAttribute("src");
+        miniPreviewBack.removeAttribute("src");
+        return;
+      }
+
+      miniPreviewResult.hidden = false;
+
+      if (!record) {
+        miniPreviewMeta.hidden = true;
+        miniPreviewImages.hidden = true;
+        miniPreviewFront.removeAttribute("src");
+        miniPreviewBack.removeAttribute("src");
+        miniPreviewEmpty.hidden = false;
+        miniPreviewEmpty.textContent = query
+          ? `No approved ID found for "${query}".`
+          : "Type employee number or name.";
+        if (miniPreviewTitle) miniPreviewTitle.textContent = "ID Preview Result";
+        return;
+      }
+
+      const validity = (record.validUntil || "N/A").trim() || "N/A";
+      const status = getValidityStatus(validity);
+      if (miniPreviewTitle) {
+        miniPreviewTitle.textContent = `ID Preview - ${record.employeeName || record.employeeNo || "Employee"}`;
+      }
+      miniPreviewMeta.innerHTML = `
+        <div><strong>No:</strong> ${record.employeeNo || "-"}</div>
+        <div><strong>Name:</strong> ${record.employeeName || "-"}</div>
+        <div><strong>Position:</strong> ${record.position || "-"}</div>
+        <div><strong>Validity:</strong> ${validity} (${status})</div>
+      `;
+      miniPreviewMeta.hidden = false;
+      miniPreviewFront.src = record.frontImage || "";
+      miniPreviewBack.src = record.backImage || "";
+      miniPreviewImages.hidden = false;
+      miniPreviewEmpty.hidden = true;
+    }
+
+    function showMiniPreviewLoading(query) {
+      if (!miniPreviewResult || !miniPreviewEmpty || !miniPreviewMeta || !miniPreviewImages) return;
+      miniPreviewResult.hidden = false;
+      miniPreviewMeta.hidden = true;
+      miniPreviewImages.hidden = true;
+      miniPreviewEmpty.hidden = false;
+      miniPreviewEmpty.textContent = query ? "Searching approved IDs..." : "Type employee number or name.";
+    }
+
+    async function bootSignInPage() {
+      if (window.idCardCloudStore && typeof window.idCardCloudStore.pull === "function") {
+        try {
+          await window.idCardCloudStore.pull();
+        } catch {}
+      }
+      if (await alreadySignedIn()) {
+        navigateWithTransition("dashboard.html", { replace: true, delay: 120 });
+      }
+
+      applyInterfaceTheme();
+      loadCredits();
+      if (signInSubmit) signInSubmit.addEventListener("click", submitLogin);
+      if (signInUsername) signInUsername.addEventListener("input", () => { if (signInError) signInError.hidden = true; });
+      if (signInPassword) signInPassword.addEventListener("input", () => { if (signInError) signInError.hidden = true; });
+      if (signInPassword) signInPassword.addEventListener("keydown", (evt) => { if (evt.key === "Enter") submitLogin(); });
+      if (signInUsername) signInUsername.addEventListener("keydown", (evt) => { if (evt.key === "Enter") submitLogin(); });
+      if (miniPreviewSearch) {
+        miniPreviewSearch.addEventListener("submit", async (evt) => {
+          evt.preventDefault();
+          const query = miniPreviewQuery ? (miniPreviewQuery.value || "").trim().toLowerCase() : "";
+          if (!query) {
+            renderMiniPreview(null, "");
+            return;
+          }
+          if (!supabaseClient) {
+            renderMiniPreview(null, query);
+            return;
+          }
+          try {
+            const { data } = await supabaseClient.auth.getSession();
+            if (!data || !data.session) {
+              renderMiniPreview(null, query);
+              return;
+            }
+          } catch {
+            renderMiniPreview(null, query);
+            return;
+          }
+          showMiniPreviewLoading(query);
+          try {
+            const found = await fetchApprovedRecordByQuery(query);
+            renderMiniPreview(found || null, query);
+          } catch (err) {
+            renderMiniPreview(null, query);
+          }
+        });
+      }
+      if (miniPreviewQuery) {
+        miniPreviewQuery.addEventListener("input", () => {
+          const query = (miniPreviewQuery.value || "").trim();
+          if (!query) renderMiniPreview(null, "");
+        });
+      }
+      if (miniPreviewClose) {
+        miniPreviewClose.addEventListener("click", () => renderMiniPreview(null, ""));
+      }
+      if (miniPreviewResult) {
+        miniPreviewResult.addEventListener("click", (evt) => {
+          if (evt.target === miniPreviewResult) renderMiniPreview(null, "");
+        });
+      }
+      document.addEventListener("keydown", (evt) => {
+        if (evt.key === "Escape" && miniPreviewResult && !miniPreviewResult.hidden) {
+          renderMiniPreview(null, "");
+        }
+      });
+      renderMiniPreview(null, "");
+      if (document.body) document.body.classList.remove("app-loading");
+      const overlay = document.getElementById("appLoadingOverlay");
+      if (overlay) overlay.hidden = true;
+    }
+
+    if (supabaseClient) {
+      supabaseClient.auth.onAuthStateChange((event) => {
+        if (event === "SIGNED_IN") {
+          if (authChannel) authChannel.postMessage({ type: "auth", state: "signed_in", ts: Date.now() });
+          navigateWithTransition("dashboard.html", { replace: true, delay: 120 });
+          return;
+        }
+        if (event === "SIGNED_OUT") {
+          if (authChannel) authChannel.postMessage({ type: "auth", state: "signed_out", ts: Date.now() });
+        }
+      });
+    }
+
+    if (authChannel) {
+      authChannel.addEventListener("message", (evt) => {
+        const msg = evt && evt.data ? evt.data : null;
+        if (!msg || msg.type !== "auth") return;
+        if (msg.state === "signed_in") {
+          navigateWithTransition("dashboard.html", { replace: true, delay: 120 });
+        }
+      });
+    }
+
+    (window.__idCardCloudReady || Promise.resolve()).finally(bootSignInPage);
+  </script>
+  <script>
+    function hideIndexLoading() {
+      if (document.body && document.body.classList.contains("app-loading")) {
+        document.body.classList.remove("app-loading");
+      }
+      const overlay = document.getElementById("appLoadingOverlay");
+      if (overlay) overlay.hidden = true;
+    }
+    window.setTimeout(hideIndexLoading, 1500);
+    window.addEventListener("load", hideIndexLoading);
+  </script>
+</body>
+</html>

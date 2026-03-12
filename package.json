@@ -1,0 +1,42 @@
+{
+  "name": "id-card-generator",
+  "version": "1.0.0",
+  "description": "ID card generator desktop app",
+  "main": "electron-main.js",
+  "author": "ID Card Generator",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist:installer": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.idcard.generator",
+    "productName": "ID Card Generator",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "*.html",
+      "*.js",
+      "*.css"
+    ],
+    "win": {
+      "icon": "assets/rb.ico",
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "installerIcon": "assets/rb.ico",
+      "uninstallerIcon": "assets/rb.ico"
+    }
+  }
+}

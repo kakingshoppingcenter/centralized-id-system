@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Opening ID Preview...</title>
+  <meta http-equiv="refresh" content="0; url=id-preview.html" />
+</head>
+<body>
+  <script>
+    (function () {
+      try {
+        const qs = window.location.search || "";
+        window.location.replace(`id-preview.html${qs}`);
+      } catch {
+        window.location.href = "id-preview.html";
+      }
+    })();
+  </script>
+</body>
+</html>
