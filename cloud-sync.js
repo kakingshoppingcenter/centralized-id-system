@@ -1,5 +1,5 @@
 (function () {
-  const PROJECT_URL = "https://fazqsjpdxeeuflusudjy.supabase.co";
+  const PROJECT_URL = "https://faqzsjpdxeeuflusudjy.supabase.co";
   const ANON_KEY =
     "sb_publishable_EQjWw8Un9js04SLKhMBdUA_Utq-kiR6";
   const TABLE_NAME = "app_settings";

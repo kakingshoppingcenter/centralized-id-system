@@ -2720,7 +2720,7 @@ const creatorCreditPhotoStorageKey = "idCardCreatorCreatorCreditPhotoV1";
 const creatorCreditTextStorageKey = "idCardCreatorCreatorCreditTextV1";
 const currentLogoStorageKey = "idCardCreatorCurrentLogoV1";
 const approvedIdsStorageKey = "idCardCreatorApprovedIdsV1";
-const supabaseProjectUrl = "https://fazqsjpdxeeuflusudjy.supabase.co";
+const supabaseProjectUrl = "https://faqzsjpdxeeuflusudjy.supabase.co";
 const supabaseAnonKey =
   "sb_publishable_EQjWw8Un9js04SLKhMBdUA_Utq-kiR6";
 const supabaseClient = window.__idCardSupabaseClient || null;
