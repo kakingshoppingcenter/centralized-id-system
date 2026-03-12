@@ -267,6 +267,25 @@
             <label>Employee Signature Color
               <input id="signatureColor" type="color" value="#111111" />
             </label>
+            <div class="theme-tools">
+              <div class="control-box-title">Front Info Visibility</div>
+              <label class="watermark-toggle">
+                <input id="showFrontEmployeeNo" type="checkbox" checked />
+                Show Employee No
+              </label>
+              <label class="watermark-toggle">
+                <input id="showFrontDateHired" type="checkbox" checked />
+                Show Date Hired
+              </label>
+              <label class="watermark-toggle">
+                <input id="showFrontValidUntil" type="checkbox" checked />
+                Show Valid Until
+              </label>
+              <label class="watermark-toggle">
+                <input id="showFrontPhoneNo" type="checkbox" checked />
+                Show Phone No
+              </label>
+            </div>
             <label>Authorized Signature Input
               <select id="authSignatureMode">
                 <option value="upload">Upload Photo</option>
@@ -471,10 +490,10 @@ If found, please call our main office</textarea>
         </div>
 
         <dl class="meta">
-          <div><dt>Employee No:</dt><dd id="frontEmployeeNo">&nbsp;</dd></div>
-          <div><dt>Date Hired:</dt><dd id="frontDateHired">&nbsp;</dd></div>
-          <div><dt>Valid Until:</dt><dd id="frontValidUntil">&nbsp;</dd></div>
-          <div><dt>Phone No:</dt><dd id="frontPhoneNo">&nbsp;</dd></div>
+          <div id="frontEmployeeNoRow"><dt>Employee No:</dt><dd id="frontEmployeeNo">&nbsp;</dd></div>
+          <div id="frontDateHiredRow"><dt>Date Hired:</dt><dd id="frontDateHired">&nbsp;</dd></div>
+          <div id="frontValidUntilRow"><dt>Valid Until:</dt><dd id="frontValidUntil">&nbsp;</dd></div>
+          <div id="frontPhoneNoRow"><dt>Phone No:</dt><dd id="frontPhoneNo">&nbsp;</dd></div>
         </dl>
 
         <div class="barcode-wrap">

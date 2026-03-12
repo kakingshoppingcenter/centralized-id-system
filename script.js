@@ -377,6 +377,14 @@ const watermarkAdjustToggle = document.getElementById("watermarkAdjustToggle");
 const watermarkAdjustPanel = document.getElementById("watermarkAdjustPanel");
 const frontWatermarkEl = document.getElementById("frontWatermark");
 const backWatermarkEl = document.getElementById("backWatermark");
+const showFrontEmployeeNoInput = document.getElementById("showFrontEmployeeNo");
+const showFrontDateHiredInput = document.getElementById("showFrontDateHired");
+const showFrontValidUntilInput = document.getElementById("showFrontValidUntil");
+const showFrontPhoneNoInput = document.getElementById("showFrontPhoneNo");
+const frontEmployeeNoRow = document.getElementById("frontEmployeeNoRow");
+const frontDateHiredRow = document.getElementById("frontDateHiredRow");
+const frontValidUntilRow = document.getElementById("frontValidUntilRow");
+const frontPhoneNoRow = document.getElementById("frontPhoneNoRow");
 
 function renderNoticeText() {
   if (!noticeTextInput || !backNoticeEl) return;
@@ -384,10 +392,29 @@ function renderNoticeText() {
   backNoticeEl.textContent = raw.trim() ? raw : "\u00A0";
 }
 
+function applyFrontInfoVisibility() {
+  const rows = [
+    [frontEmployeeNoRow, showFrontEmployeeNoInput],
+    [frontDateHiredRow, showFrontDateHiredInput],
+    [frontValidUntilRow, showFrontValidUntilInput],
+    [frontPhoneNoRow, showFrontPhoneNoInput]
+  ];
+  rows.forEach(([row, input]) => {
+    if (!row || !input) return;
+    row.hidden = !input.checked;
+  });
+}
+
 if (noticeTextInput) {
   noticeTextInput.addEventListener("input", renderNoticeText);
   renderNoticeText();
 }
+
+[showFrontEmployeeNoInput, showFrontDateHiredInput, showFrontValidUntilInput, showFrontPhoneNoInput].forEach((el) => {
+  if (!el) return;
+  el.addEventListener("input", applyFrontInfoVisibility);
+  el.addEventListener("change", applyFrontInfoVisibility);
+});
 
 const defaultWatermarkSettings = {
   show: false,
@@ -4544,6 +4571,7 @@ if (adminSettingsPanel) {
   applyPersistedSettings(adminSettingsPanel);
   bindSettingPersistence(adminSettingsPanel);
 }
+applyFrontInfoVisibility();
 loadInterfaceTheme();
 applyAdminAccessState();
 if (cloudReady) {
