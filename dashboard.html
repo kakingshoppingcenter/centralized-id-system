@@ -286,6 +286,41 @@
                 Show Phone No
               </label>
             </div>
+            <div class="theme-tools">
+              <div class="control-box-title">Back Info Visibility</div>
+              <label class="watermark-toggle">
+                <input id="showBackHomeAddress" type="checkbox" checked />
+                Show Home Address
+              </label>
+              <label class="watermark-toggle">
+                <input id="showBackEmergencyContact" type="checkbox" checked />
+                Show Emergency Contact
+              </label>
+              <label class="watermark-toggle">
+                <input id="showBackReturnContact" type="checkbox" checked />
+                Show Return Contact
+              </label>
+              <label class="watermark-toggle">
+                <input id="showBackAuthorizedBy" type="checkbox" checked />
+                Show Authorized Signatory
+              </label>
+              <label class="watermark-toggle">
+                <input id="showBackNotice" type="checkbox" checked />
+                Show Notice
+              </label>
+              <label class="watermark-toggle">
+                <input id="showBackQrSection" type="checkbox" checked />
+                Show QR Code
+              </label>
+              <label class="watermark-toggle">
+                <input id="showBackOfficeAddress" type="checkbox" checked />
+                Show Office Address
+              </label>
+              <label class="watermark-toggle">
+                <input id="showBackTelephone" type="checkbox" checked />
+                Show Telephone
+              </label>
+            </div>
             <label>Authorized Signature Input
               <select id="authSignatureMode">
                 <option value="upload">Upload Photo</option>
@@ -504,25 +539,25 @@ If found, please call our main office</textarea>
 
       <article class="id-card back theme-plain" id="backCard">
         <section class="back-content">
-          <p class="home-address-line"><strong>Home Address</strong><br><span id="backHomeAddress">&nbsp;</span></p>
-          <p class="emergency-contact-line"><strong>In Case of Emergency Contact</strong><br><span id="backEmergencyPerson">&nbsp;</span><br><span id="backEmergencyNo">&nbsp;</span></p>
-          <p class="return-contact-line"><strong>If found please return or call</strong><br><span id="backReturn">&nbsp;</span><br><span id="backReturnNo">&nbsp;</span></p>
+          <p id="backHomeAddressRow" class="home-address-line"><strong>Home Address</strong><br><span id="backHomeAddress">&nbsp;</span></p>
+          <p id="backEmergencyContactRow" class="emergency-contact-line"><strong>In Case of Emergency Contact</strong><br><span id="backEmergencyPerson">&nbsp;</span><br><span id="backEmergencyNo">&nbsp;</span></p>
+          <p id="backReturnContactRow" class="return-contact-line"><strong>If found please return or call</strong><br><span id="backReturn">&nbsp;</span><br><span id="backReturnNo">&nbsp;</span></p>
 
-          <div class="auth-line">
+          <div id="backAuthorizedByRow" class="auth-line">
             <img id="authorizedSignature" alt="Authorized signature" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='120'%3E%3Crect width='100%25' height='100%25' fill='transparent'/%3E%3C/svg%3E" />
             <strong id="backSignatory">&nbsp;</strong>
             <span id="backSignatoryTitle">&nbsp;</span>
           </div>
 
-          <p class="notice" id="backNotice">&nbsp;</p>
+          <p class="notice" id="backNoticeRow"><span id="backNotice">&nbsp;</span></p>
           <div id="backQrWrap" class="back-qr-wrap">
             <canvas id="backQrCanvas" width="96" height="96" aria-label="Back QR code"></canvas>
           </div>
         </section>
 
         <footer>
-          <p id="backAddress">&nbsp;</p>
-          <p>Telephone No. <span id="backTelephone">&nbsp;</span></p>
+          <p id="backOfficeAddressRow"><span id="backAddress">&nbsp;</span></p>
+          <p id="backTelephoneRow">Telephone No. <span id="backTelephone">&nbsp;</span></p>
         </footer>
         <div class="card-watermark" id="backWatermark" hidden>&nbsp;</div>
       </article>

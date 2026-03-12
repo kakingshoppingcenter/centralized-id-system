@@ -381,10 +381,25 @@ const showFrontEmployeeNoInput = document.getElementById("showFrontEmployeeNo");
 const showFrontDateHiredInput = document.getElementById("showFrontDateHired");
 const showFrontValidUntilInput = document.getElementById("showFrontValidUntil");
 const showFrontPhoneNoInput = document.getElementById("showFrontPhoneNo");
+const showBackHomeAddressInput = document.getElementById("showBackHomeAddress");
+const showBackEmergencyContactInput = document.getElementById("showBackEmergencyContact");
+const showBackReturnContactInput = document.getElementById("showBackReturnContact");
+const showBackAuthorizedByInput = document.getElementById("showBackAuthorizedBy");
+const showBackNoticeInput = document.getElementById("showBackNotice");
+const showBackQrSectionInput = document.getElementById("showBackQrSection");
+const showBackOfficeAddressInput = document.getElementById("showBackOfficeAddress");
+const showBackTelephoneInput = document.getElementById("showBackTelephone");
 const frontEmployeeNoRow = document.getElementById("frontEmployeeNoRow");
 const frontDateHiredRow = document.getElementById("frontDateHiredRow");
 const frontValidUntilRow = document.getElementById("frontValidUntilRow");
 const frontPhoneNoRow = document.getElementById("frontPhoneNoRow");
+const backHomeAddressRow = document.getElementById("backHomeAddressRow");
+const backEmergencyContactRow = document.getElementById("backEmergencyContactRow");
+const backReturnContactRow = document.getElementById("backReturnContactRow");
+const backAuthorizedByRow = document.getElementById("backAuthorizedByRow");
+const backNoticeRow = document.getElementById("backNoticeRow");
+const backOfficeAddressRow = document.getElementById("backOfficeAddressRow");
+const backTelephoneRow = document.getElementById("backTelephoneRow");
 
 function renderNoticeText() {
   if (!noticeTextInput || !backNoticeEl) return;
@@ -405,6 +420,23 @@ function applyFrontInfoVisibility() {
   });
 }
 
+function applyBackInfoVisibility() {
+  const rows = [
+    [backHomeAddressRow, showBackHomeAddressInput],
+    [backEmergencyContactRow, showBackEmergencyContactInput],
+    [backReturnContactRow, showBackReturnContactInput],
+    [backAuthorizedByRow, showBackAuthorizedByInput],
+    [backNoticeRow, showBackNoticeInput],
+    [backQrWrap, showBackQrSectionInput],
+    [backOfficeAddressRow, showBackOfficeAddressInput],
+    [backTelephoneRow, showBackTelephoneInput]
+  ];
+  rows.forEach(([row, input]) => {
+    if (!row || !input) return;
+    row.hidden = !input.checked;
+  });
+}
+
 if (noticeTextInput) {
   noticeTextInput.addEventListener("input", renderNoticeText);
   renderNoticeText();
@@ -414,6 +446,21 @@ if (noticeTextInput) {
   if (!el) return;
   el.addEventListener("input", applyFrontInfoVisibility);
   el.addEventListener("change", applyFrontInfoVisibility);
+});
+
+[
+  showBackHomeAddressInput,
+  showBackEmergencyContactInput,
+  showBackReturnContactInput,
+  showBackAuthorizedByInput,
+  showBackNoticeInput,
+  showBackQrSectionInput,
+  showBackOfficeAddressInput,
+  showBackTelephoneInput
+].forEach((el) => {
+  if (!el) return;
+  el.addEventListener("input", applyBackInfoVisibility);
+  el.addEventListener("change", applyBackInfoVisibility);
 });
 
 const defaultWatermarkSettings = {
@@ -4572,6 +4619,7 @@ if (adminSettingsPanel) {
   bindSettingPersistence(adminSettingsPanel);
 }
 applyFrontInfoVisibility();
+applyBackInfoVisibility();
 loadInterfaceTheme();
 applyAdminAccessState();
 if (cloudReady) {
