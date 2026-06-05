@@ -5,49 +5,21 @@
   const TABLE_NAME = "app_settings";
   const KEY_PREFIX = "idCardCreator";
   const DELETED_SENTINEL = "__IDCARD_DELETED__";
+  const ENTRY_SESSION_KEY = "idCardCreatorEntryLoginSessionV1";
+  const ADMIN_SESSION_KEY = "idCardCreatorAdminSessionV1";
+  const NAV_CONTEXT_KEY = "idCardCreatorApprovedIdsNavContextV1";
+  const LOGOUT_TS_KEY = "idCardCreatorLogoutTsV1";
+  const HARD_LOGOUT_MS = 24 * 60 * 60 * 1000;
   const LOCAL_ONLY_KEYS = new Set([
-    "idCardCreatorEntryLoginSessionV1",
-    "idCardCreatorAdminSessionV1",
-    "idCardCreatorApprovedIdsNavContextV1",
-    "idCardCreatorLogoutTsV1"
+    ENTRY_SESSION_KEY,
+    ADMIN_SESSION_KEY,
+    NAV_CONTEXT_KEY,
+    LOGOUT_TS_KEY
   ]);
 
   function shouldSyncKey(key) {
     const k = String(key || "");
     return k.startsWith(KEY_PREFIX) && !LOCAL_ONLY_KEYS.has(k);
-  }
-
-  const hasSupabase = !!(window.supabase && PROJECT_URL && ANON_KEY);
-  const supabaseClient = hasSupabase
-    ? window.supabase.createClient(PROJECT_URL, ANON_KEY, {
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: true,
-          storage: window.localStorage
-        }
-      })
-    : null;
-
-  if (supabaseClient) {
-    window.__idCardSupabaseClient = supabaseClient;
-  }
-
-  const cache = new Map();
-  const pendingUpserts = new Map();
-  const pendingDeletes = new Set();
-  const WRITE_DEBOUNCE_MS = 650;
-  const CLOUD_POLL_INTERVAL_MS = 5 * 60 * 1000;
-  const MIN_PULL_GAP_MS = 45 * 1000;
-  const FAST_READY_TIMEOUT_MS = 250;
-  let flushTimer = null;
-  let pullInProgress = null;
-  let lastPullAt = 0;
-
-  function notifyChange(key, oldValue, newValue) {
-    window.dispatchEvent(
-      new CustomEvent("id-card-store", { detail: { key, oldValue, newValue } })
-    );
   }
 
   function readLocalStorageValue(key) {
@@ -71,6 +43,115 @@
     }
   }
 
+  function removeLocalStorageValue(key) {
+    writeLocalStorageValue(key, null);
+  }
+
+  function clearLocalLoginState() {
+    removeLocalStorageValue(ENTRY_SESSION_KEY);
+    removeLocalStorageValue(ADMIN_SESSION_KEY);
+    removeLocalStorageValue(NAV_CONTEXT_KEY);
+  }
+
+  function getLogoutTs() {
+    const raw = Number(readLocalStorageValue(LOGOUT_TS_KEY) || 0);
+    return Number.isFinite(raw) ? raw : 0;
+  }
+
+  function isHardLogoutActive() {
+    const ts = getLogoutTs();
+    return !!ts && Date.now() - ts < HARD_LOGOUT_MS;
+  }
+
+  function markHardLogout() {
+    clearLocalLoginState();
+    writeLocalStorageValue(LOGOUT_TS_KEY, String(Date.now()));
+  }
+
+  function clearHardLogout() {
+    removeLocalStorageValue(LOGOUT_TS_KEY);
+  }
+
+  const hasSupabase = !!(window.supabase && PROJECT_URL && ANON_KEY);
+  const supabaseClient = hasSupabase
+    ? window.supabase.createClient(PROJECT_URL, ANON_KEY, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+          storage: window.localStorage
+        }
+      })
+    : null;
+
+  if (supabaseClient && supabaseClient.auth) {
+    const originalGetSession = supabaseClient.auth.getSession.bind(supabaseClient.auth);
+    const originalSignIn = supabaseClient.auth.signInWithPassword.bind(supabaseClient.auth);
+    const originalSignOut = supabaseClient.auth.signOut.bind(supabaseClient.auth);
+
+    supabaseClient.auth.getSession = async function guardedGetSession() {
+      if (isHardLogoutActive()) {
+        clearLocalLoginState();
+        return { data: { session: null }, error: null };
+      }
+      return originalGetSession();
+    };
+
+    supabaseClient.auth.signInWithPassword = async function guardedSignInWithPassword(credentials) {
+      clearHardLogout();
+      const result = await originalSignIn(credentials);
+      if (result && result.data && result.data.session) clearHardLogout();
+      return result;
+    };
+
+    supabaseClient.auth.signOut = async function guardedSignOut(options) {
+      markHardLogout();
+      try {
+        return await originalSignOut(options);
+      } finally {
+        clearLocalLoginState();
+      }
+    };
+
+    if (isHardLogoutActive()) {
+      clearLocalLoginState();
+      originalSignOut().catch(() => {});
+    }
+  }
+
+  if (supabaseClient) {
+    window.__idCardSupabaseClient = supabaseClient;
+  }
+
+  document.addEventListener(
+    "click",
+    (evt) => {
+      const target = evt.target && typeof evt.target.closest === "function" ? evt.target.closest("#entryLogoutBtn") : null;
+      if (target) markHardLogout();
+    },
+    true
+  );
+
+  window.__idCardMarkHardLogout = markHardLogout;
+  window.__idCardIsHardLogoutActive = isHardLogoutActive;
+
+  const cache = new Map();
+  const pendingUpserts = new Map();
+  const pendingDeletes = new Set();
+  const WRITE_DEBOUNCE_MS = 650;
+  const CLOUD_POLL_INTERVAL_MS = 5 * 60 * 1000;
+  const MIN_PULL_GAP_MS = 45 * 1000;
+  const FAST_READY_TIMEOUT_MS = 250;
+  let flushTimer = null;
+  let pullInProgress = null;
+  let lastPullAt = 0;
+
+  function notifyChange(key, oldValue, newValue) {
+    window.dispatchEvent(
+      new CustomEvent("id-card-store", { detail: { key, oldValue, newValue } })
+    );
+  }
+
   function setCacheValue(key, value, options = {}) {
     const k = String(key || "");
     const oldValue = cache.has(k) ? cache.get(k) : null;
@@ -85,12 +166,18 @@
   }
 
   function getLocalOnlyValue(key) {
-    return readLocalStorageValue(key);
+    const k = String(key || "");
+    if (isHardLogoutActive() && (k === ENTRY_SESSION_KEY || k === ADMIN_SESSION_KEY || k === NAV_CONTEXT_KEY)) {
+      clearLocalLoginState();
+      return null;
+    }
+    return readLocalStorageValue(k);
   }
 
   function setLocalOnlyValue(key, value) {
     const k = String(key || "");
     const nextValue = value === null || value === undefined ? null : String(value);
+    if (k === ENTRY_SESSION_KEY && nextValue) clearHardLogout();
     writeLocalStorageValue(k, nextValue);
     setCacheValue(k, nextValue);
   }
