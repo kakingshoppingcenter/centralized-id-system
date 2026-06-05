@@ -36,9 +36,10 @@
   const cache = new Map();
   const pendingUpserts = new Map();
   const pendingDeletes = new Set();
-  const WRITE_DEBOUNCE_MS = 1200;
+  const WRITE_DEBOUNCE_MS = 650;
   const CLOUD_POLL_INTERVAL_MS = 5 * 60 * 1000;
   const MIN_PULL_GAP_MS = 45 * 1000;
+  const FAST_READY_TIMEOUT_MS = 250;
   let flushTimer = null;
   let pullInProgress = null;
   let lastPullAt = 0;
@@ -49,7 +50,28 @@
     );
   }
 
-  function setCacheValue(key, value) {
+  function readLocalStorageValue(key) {
+    try {
+      return window.localStorage.getItem(String(key || ""));
+    } catch {
+      return null;
+    }
+  }
+
+  function writeLocalStorageValue(key, value) {
+    const k = String(key || "");
+    try {
+      if (value === null || value === undefined) {
+        window.localStorage.removeItem(k);
+      } else {
+        window.localStorage.setItem(k, String(value));
+      }
+    } catch {
+      // ignore local storage quota/privacy failures
+    }
+  }
+
+  function setCacheValue(key, value, options = {}) {
     const k = String(key || "");
     const oldValue = cache.has(k) ? cache.get(k) : null;
     const nextValue = value === null || value === undefined ? null : String(value);
@@ -58,36 +80,24 @@
     } else {
       cache.set(k, nextValue);
     }
+    if (options.persist && k) writeLocalStorageValue(k, nextValue);
     if (oldValue !== nextValue) notifyChange(k, oldValue, nextValue);
   }
 
   function getLocalOnlyValue(key) {
-    try {
-      return window.localStorage.getItem(String(key || ""));
-    } catch {
-      return null;
-    }
+    return readLocalStorageValue(key);
   }
 
   function setLocalOnlyValue(key, value) {
     const k = String(key || "");
     const nextValue = value === null || value === undefined ? null : String(value);
-    try {
-      if (nextValue === null) {
-        window.localStorage.removeItem(k);
-      } else {
-        window.localStorage.setItem(k, nextValue);
-      }
-    } catch {
-      // ignore local storage failures and continue with in-memory cache
-    }
+    writeLocalStorageValue(k, nextValue);
     setCacheValue(k, nextValue);
   }
 
   function queueUpsert(key, value) {
     if (!supabaseClient || !shouldSyncKey(key)) return;
     const k = String(key);
-    // Keep delete guards active until the delete sentinel is observed from cloud.
     if (String(value) !== DELETED_SENTINEL) {
       pendingDeletes.delete(k);
     }
@@ -122,7 +132,7 @@
 
     Array.from(cache.keys()).forEach((key) => {
       if (shouldSyncKey(key) && !cloudMap.has(key)) {
-        setCacheValue(key, null);
+        setCacheValue(key, null, { persist: true });
       }
     });
 
@@ -131,11 +141,11 @@
         return;
       }
       if (value === DELETED_SENTINEL) {
-        setCacheValue(key, null);
+        setCacheValue(key, null, { persist: true });
         pendingDeletes.delete(key);
         return;
       }
-      setCacheValue(key, value);
+      setCacheValue(key, value, { persist: true });
     });
   }
 
@@ -170,7 +180,13 @@
         return cache.has(k) ? cache.get(k) : null;
       }
       if (!shouldSyncKey(k)) return null;
-      return cache.has(k) ? cache.get(k) : null;
+      if (cache.has(k)) return cache.get(k);
+      const local = readLocalStorageValue(k);
+      if (local !== null && local !== undefined) {
+        setCacheValue(k, local);
+        return local;
+      }
+      return null;
     },
     setItem(key, value) {
       const k = String(key || "");
@@ -179,8 +195,9 @@
         return;
       }
       if (!shouldSyncKey(k)) return;
-      setCacheValue(k, String(value));
-      queueUpsert(k, String(value));
+      const nextValue = String(value);
+      setCacheValue(k, nextValue, { persist: true });
+      queueUpsert(k, nextValue);
     },
     removeItem(key) {
       const k = String(key || "");
@@ -190,7 +207,7 @@
       }
       if (!shouldSyncKey(k)) return;
       pendingDeletes.add(k);
-      setCacheValue(k, null);
+      setCacheValue(k, null, { persist: true });
       queueUpsert(k, DELETED_SENTINEL);
     },
     clear() {
@@ -210,20 +227,28 @@
 
   window.idCardCloudStore = cloudStore;
 
-  cloudStore.ready = Promise.race([
-    (async function () {
+  const backgroundInitialPull = (async function () {
+    try {
       await pullCloudNow({ force: true });
       return true;
-    })(),
-    new Promise((resolve) => setTimeout(() => resolve(false), 4000))
+    } catch {
+      return false;
+    }
+  })();
+
+  cloudStore.ready = Promise.race([
+    backgroundInitialPull,
+    new Promise((resolve) => setTimeout(() => resolve(false), FAST_READY_TIMEOUT_MS))
   ]);
 
   window.__idCardCloudReady = cloudStore.ready;
 
+  backgroundInitialPull.catch(() => {});
+
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") pullCloudNow();
+    if (document.visibilityState === "visible") pullCloudNow().catch(() => {});
   });
-  window.addEventListener("focus", pullCloudNow);
+  window.addEventListener("focus", () => pullCloudNow().catch(() => {}));
   setInterval(() => {
     pullCloudNow().catch(() => {});
   }, CLOUD_POLL_INTERVAL_MS);
