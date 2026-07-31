@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b1f3a" />
+  <meta name="description" content="Kaking Store Cash daily sales and deposit reconciliation system" />
+  <title>Kaking Store Cash</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <section id="loginScreen" class="auth-shell">
+    <div class="auth-card">
+      <div class="brand auth-brand">
+        <div class="brand-mark">K</div>
+        <div><strong>Kaking Store Cash</strong><span>Daily Sales & Deposit Control</span></div>
+      </div>
+      <div class="auth-copy">
+        <p class="eyebrow">Secure access</p>
+        <h1>Sign in to continue</h1>
+        <p>Use your assigned company account. Access is controlled by role and branch.</p>
+      </div>
+      <form id="loginForm" class="auth-form">
+        <label>Email<input id="loginEmail" type="email" autocomplete="username" required placeholder="name@company.com" /></label>
+        <label>Password<input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Enter password" /></label>
+        <button class="btn btn-primary btn-block" type="submit">Sign in</button>
+      </form>
+      <div id="demoAccess" class="demo-access hidden">
+        <div class="divider"><span>Demonstration mode</span></div>
+        <p>No Supabase credentials are configured. Select a role to preview the complete workflow.</p>
+        <div class="demo-grid">
+          <button class="btn btn-soft" data-demo-role="admin">Administrator</button>
+          <button class="btn btn-soft" data-demo-role="checker">Deposit Checker</button>
+          <button class="btn btn-soft" data-demo-role="store">Store User</button>
+        </div>
+      </div>
+      <p class="auth-foot">Kaking Shopping Center · Internal Business System</p>
+    </div>
+  </section>
+
+  <div id="appShell" class="app-shell hidden">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">K</div>
+        <div><strong>Kaking Store Cash</strong><span>Sales & Deposit Control</span></div>
+      </div>
+      <nav class="sidebar-nav" aria-label="Primary navigation">
+        <button class="nav-item active" data-view="dashboard"><span class="nav-icon">▦</span><span>Dashboard</span></button>
+        <button class="nav-item" data-view="entry"><span class="nav-icon">✎</span><span>Daily Entry</span></button>
+        <button class="nav-item checker-only" data-view="checker"><span class="nav-icon">✓</span><span>Deposit Checker</span></button>
+        <button class="nav-item" data-view="reports"><span class="nav-icon">▤</span><span>Branch Reports</span></button>
+        <button class="nav-item admin-only" data-view="executive"><span class="nav-icon">◉</span><span>Executive Summary</span></button>
+        <button class="nav-item admin-only" data-view="settings"><span class="nav-icon">⚙</span><span>Settings</span></button>
+      </nav>
+      <div class="profile-card">
+        <div class="profile-main">
+          <div id="profileAvatar" class="avatar">A</div>
+          <div class="profile-copy"><strong id="profileName">Account</strong><span id="profileRole">Role</span></div>
+        </div>
+        <div class="profile-actions">
+          <button id="securityBtn" class="profile-btn" type="button" title="Account security">Security</button>
+          <button id="signOutBtn" class="profile-btn signout-btn" type="button">Sign out</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-shell">
+      <header class="topbar">
+        <div class="topbar-title">
+          <button id="menuBtn" class="icon-btn menu-btn" type="button" aria-label="Open navigation">☰</button>
+          <div><p id="pageEyebrow" class="eyebrow">Overview</p><h1 id="pageTitle">Dashboard</h1></div>
+        </div>
+        <div class="topbar-meta">
+          <button class="icon-btn notification-btn" type="button" aria-label="Notifications">♢<span id="notificationCount" class="notification-count">0</span></button>
+          <div class="date-block"><span class="date-icon">▣</span><div><strong id="currentDate">—</strong><span id="currentTime">—</span></div></div>
+        </div>
+      </header>
+
+      <div class="content-shell">
+        <section id="dashboardView" class="view active">
+          <div class="hero-row">
+            <div><p class="eyebrow">Daily control center</p><h2>Sales and deposit overview</h2><p class="muted">Track branch submissions, actual receipts, differences, and customer volume.</p></div>
+            <div class="filter-row"><label class="compact-field">Business date<input id="dashboardDate" type="date" /></label><button id="refreshBtn" class="btn btn-secondary">Refresh</button></div>
+          </div>
+          <div class="metric-grid">
+            <article class="metric-card"><span>Reported total</span><strong id="metricReported">₱0.00</strong><small id="metricReportedSub">0 submissions</small></article>
+            <article class="metric-card"><span>Actual received</span><strong id="metricReceived">₱0.00</strong><small id="metricReceivedSub">Pending verification</small></article>
+            <article class="metric-card"><span>Net difference</span><strong id="metricDifference">₱0.00</strong><small id="metricDifferenceSub">Balanced</small></article>
+            <article class="metric-card"><span>Total customers</span><strong id="metricCustomers">0</strong><small id="metricCustomersSub">Across all branches</small></article>
+          </div>
+          <div class="dashboard-grid">
+            <article class="panel panel-wide">
+              <div class="panel-header"><div><p class="eyebrow">Branch status</p><h3>Daily submissions</h3></div><button class="text-btn" data-view-link="reports">View reports →</button></div>
+              <div class="table-wrap"><table><thead><tr><th>Branch</th><th>Date</th><th class="numeric">Reported</th><th class="numeric">Actual</th><th class="numeric">Difference</th><th class="numeric">Customers</th><th>Status</th></tr></thead><tbody id="dashboardTableBody"></tbody></table></div>
+            </article>
+            <article class="panel">
+              <div class="panel-header"><div><p class="eyebrow">Selected branch</p><h3>Daily summary</h3></div><select id="summaryBranch" class="small-select"></select></div>
+              <div id="dailySummary" class="summary-list"></div>
+            </article>
+          </div>
+        </section>
+
+        <section id="entryView" class="view">
+          <div class="view-heading"><div><p class="eyebrow">Store submission</p><h2>Daily sales entry</h2><p class="muted">Encode the final daily payment summary. Values are validated to two decimal places.</p></div><span id="entryModeBadge" class="status status-draft">Draft</span></div>
+          <form id="entryForm" class="panel form-panel">
+            <div class="form-grid form-grid-two"><label>Branch<select id="entryBranch" required></select></label><label>Business date<input id="entryDate" type="date" required /></label></div>
+            <div id="paymentFields" class="payment-grid"></div>
+            <div class="form-grid form-grid-two lower-fields"><label>Number of customers<input id="customerCount" type="number" min="0" step="1" required value="0" /></label><label>Store remarks<textarea id="storeRemarks" rows="3" maxlength="500" placeholder="Optional note for the checker"></textarea></label></div>
+            <div class="total-banner"><span>Reported total</span><strong id="entryTotal">₱0.00</strong></div>
+            <div class="form-actions"><button id="saveDraftBtn" type="button" class="btn btn-secondary">Save draft</button><button id="submitReportBtn" type="submit" class="btn btn-primary">Submit report</button></div>
+          </form>
+        </section>
+
+        <section id="checkerView" class="view checker-only">
+          <div class="view-heading"><div><p class="eyebrow">Verification workflow</p><h2>Deposit checker</h2><p class="muted">Compare the submitted store report against the amount actually received.</p></div><span class="status status-pending">Controlled access</span></div>
+          <div class="checker-grid">
+            <article class="panel"><div class="panel-header"><div><p class="eyebrow">Report selection</p><h3>Pending submission</h3></div></div><label>Select branch report<select id="checkerReport"></select></label><div id="checkerReportedBreakdown" class="summary-list compact-summary"></div></article>
+            <form id="checkerForm" class="panel">
+              <div class="panel-header"><div><p class="eyebrow">Actual deposit audit</p><h3>Reconciliation</h3></div><span id="checkerStatus" class="status status-pending">Pending</span></div>
+              <label>Actual amount received<input id="actualReceived" type="number" min="0" step="0.01" required placeholder="0.00" /></label>
+              <label>Reading / reference amount<input id="readingAmount" type="number" min="0" step="0.01" required placeholder="0.00" /></label>
+              <div class="difference-box"><span>Difference</span><strong id="checkerDifference">₱0.00</strong><small>Actual received minus reported total</small></div>
+              <label>Verified by<input id="verifiedBy" type="text" required maxlength="120" /></label>
+              <label>Checker remarks<textarea id="checkerRemarks" rows="4" maxlength="500" placeholder="Required when there is a difference"></textarea></label>
+              <button class="btn btn-success btn-block" type="submit">Save verification</button>
+            </form>
+          </div>
+        </section>
+
+        <section id="reportsView" class="view">
+          <div class="view-heading"><div><p class="eyebrow">Historical records</p><h2>Branch reports</h2><p class="muted">Search, review, and export daily reports without changing verified records.</p></div><button id="exportCsvBtn" class="btn btn-secondary">Export CSV</button></div>
+          <article class="panel">
+            <div class="report-filters"><label>From<input id="reportFrom" type="date" /></label><label>To<input id="reportTo" type="date" /></label><label>Branch<select id="reportBranch"></select></label><label>Status<select id="reportStatus"><option value="all">All statuses</option><option value="draft">Draft</option><option value="submitted">Pending</option><option value="verified">Matched</option><option value="with_difference">With difference</option></select></label><button id="applyReportFilters" class="btn btn-primary">Apply</button></div>
+            <div class="table-wrap"><table><thead><tr><th>Branch</th><th>Date</th><th class="numeric">Cash</th><th class="numeric">Digital/Card</th><th class="numeric">Reported</th><th class="numeric">Actual</th><th class="numeric">Difference</th><th class="numeric">Customers</th><th>Status</th></tr></thead><tbody id="reportsTableBody"></tbody></table></div>
+          </article>
+        </section>
+
+        <section id="executiveView" class="view admin-only">
+          <div class="view-heading"><div><p class="eyebrow">Management reporting</p><h2>Executive summary</h2><p class="muted">Consolidated performance and control indicators for the selected period.</p></div><div class="filter-row"><label class="compact-field">Business date<input id="executiveDate" type="date" /></label></div></div>
+          <div id="executiveMetrics" class="metric-grid"></div>
+          <div class="dashboard-grid"><article class="panel panel-wide"><div class="panel-header"><div><p class="eyebrow">Payment mix</p><h3>Consolidated payment channels</h3></div></div><div id="paymentMix" class="bar-list"></div></article><article class="panel"><div class="panel-header"><div><p class="eyebrow">Control exceptions</p><h3>Items requiring attention</h3></div></div><div id="exceptionList" class="exception-list"></div></article></div>
+        </section>
+
+        <section id="settingsView" class="view admin-only">
+          <div class="view-heading"><div><p class="eyebrow">Administration</p><h2>System settings</h2><p class="muted">Configuration guidance for branches, users, security, and deployment.</p></div></div>
+          <div class="settings-grid">
+            <article class="panel"><h3>Supabase connection</h3><p class="muted">This interface uses only the browser-safe publishable key. Secret or service-role keys must never be stored here.</p><div id="connectionStatus" class="connection-card"></div></article>
+            <article class="panel"><h3>Access roles</h3><div class="role-list"><div><strong>Store User</strong><span>Encode and submit assigned branch reports.</span></div><div><strong>Deposit Checker</strong><span>Verify actual receipts and record differences.</span></div><div><strong>Administrator</strong><span>View all reports, summaries, users, and branches.</span></div></div></article>
+            <article class="panel"><h3>Control rules</h3><ul class="check-list"><li>One report per branch and business date</li><li>Submitted records cannot be silently overwritten</li><li>Difference remarks are mandatory</li><li>Verified transactions retain audit history</li><li>All amounts are rounded to centavos</li></ul></article>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div id="securityModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="securityTitle"><div class="modal-card"><div class="panel-header"><div><p class="eyebrow">Account</p><h3 id="securityTitle">Security</h3></div><button id="closeSecurityModal" class="icon-btn">×</button></div><p class="muted">Password changes are sent through Supabase Auth. In demonstration mode, no account changes are made.</p><button id="sendResetBtn" class="btn btn-primary btn-block">Send password reset email</button></div></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
